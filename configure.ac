@@ -1,0 +1,38 @@
+AC_INIT([logc], [0.1.0], [cynerd@email.cz])
+AC_CONFIG_MACRO_DIRS([m4])
+
+AM_INIT_AUTOMAKE([foreign silent-rules subdir-objects -Wall -Wno-portability])
+AM_SILENT_RULES([yes])
+
+AC_PROG_CC
+AC_GNU_SOURCE
+AM_PROG_AR
+LT_INIT
+PKG_INSTALLDIR
+
+AC_PATH_PROG([GPERF], [gperf])
+AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
+
+
+dnl Tests
+AC_ARG_ENABLE([tests], AC_HELP_STRING([--disable-tests], [Disable tests]))
+AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" != "xno"])
+AS_IF([test "x$enable_tests" != "xno"], [
+  PKG_CHECK_MODULES([CHECK], [check >= 0.11])
+])
+AX_VALGRIND_CHECK
+
+dnl Linters
+AC_ARG_ENABLE([linters], AC_HELP_STRING([--disable-linters], [Disable linters (cppcheck and luacheck)]))
+AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_linters" != "xno"])
+AS_IF([test "x$enable_linters" != "xno"], [
+  AC_PATH_PROG([CPPCHECK], [cppcheck])
+])
+
+dnl Coverage
+AX_CODE_COVERAGE
+
+
+AC_CONFIG_FILES([Makefile logc.pc])
+
+AC_OUTPUT

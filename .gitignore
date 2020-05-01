@@ -1,0 +1,49 @@
+# Outputs
+*.so
+*.o
+*.a
+*.la
+*.lo
+*.pc
+.libs
+*.gperf.c
+
+# Test outputs
+tests/unittests
+test-suite*.log
+tests/*.log
+tests/*.trs
+
+## Autotools
+# http://www.gnu.org/software/automake
+Makefile
+Makefile.in
+/ar-lib
+/test-driver
+.deps
+.dirstamp
+# http://www.gnu.org/software/autoconf
+autom4te.cache
+/autoscan.log
+/autoscan-*.log
+/aclocal.m4
+/compile
+/config.guess
+/config.h.in
+/config.log
+/config.status
+/config.sub
+/configure
+/configure.scan
+/depcomp
+/install-sh
+/missing
+/stamp-h1
+/aminclude_static.am
+# https://www.gnu.org/software/libtool/
+/ltmain.sh
+/libtool
+# http://www.gnu.org/software/texinfo
+/texinfo.tex
+# http://www.gnu.org/software/m4/
+m4

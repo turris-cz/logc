@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: logc
+Description: logc is a logging library
+Version: %version%
+Libs: -L${libdir} -llogc
+Cflags: -I${includedir}

@@ -1,0 +1,12 @@
+Logging for C (LogC)
+====================
+
+This is library for C for logging. It is able to output to any stream (file,
+socket, stdout, ...) as well as to syslog. It optionally outputs colors and source
+code line.
+
+It is loosely designed close to Python logging but is intended to be versatile in
+C and primarily easy to use no matter if you are writing library or application.
+
+This library tries to introduce minimum amount of additional dependencies to be as
+simple to include as possible.
