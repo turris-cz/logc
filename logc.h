@@ -59,8 +59,8 @@ void log_quiet(log_t) __attribute__((nonnull));
 
 //// Some standard output formats ////////////////////////////////////////////////
 #define LOG_FORMAT_PLAIN "%(%n: %)%m%(: %e%)"
-#define LOG_FORMAT_SOURCE "%(%n%)(%f:%i,%c): %m%(: %e%)"
-#define LOG_FORMAT_FULL "%L:%(%n%)(%f:%i,%c): %m%(: %e%)"
+#define LOG_FORMAT_SOURCE "%(%(%n%)%d((%f:%i,%c)%): %)%m%(: %e%)"
+#define LOG_FORMAT_FULL "%L:%(%n%)%d((%f:%i,%c)%): %m%(: %e%)"
 
 //// Output to FILE //////////////////////////////////////////////////////////////
 // Output no colors even when output is detected as capable terminal
@@ -75,18 +75,30 @@ void log_quiet(log_t) __attribute__((nonnull));
 // Flags is ored set of LOG_F_* flags or zero.
 // Log level can be used to further limit output besides primary verbosity
 // Format is string with following optional fields:
-//   %m: Formatted log message itself
-//   %n: Log name
-//   %f: Source file of message
-//   %i: Source line of message (in source file)
-//   %c: Function message is raised from
-//   %l: Lowercase string representation of message level
-//   %L: Uppercase string representation of message level
-//   %e: Standard error message (empty if errno == 0)
-//   %(: Start of condition. Following text till the end of condition is printed
-//       only if at least one fields in it is not empty.
-//   %): End of condition block
-//   %%: Plain %
+//   %m:  Formatted log message itself
+//   %n:  Log name
+//   %f:  Source file of message
+//   %i:  Source line of message (in source file)
+//   %c:  Function message is raised from
+//   %l:  Lowercase string representation of message level
+//   %L:  Uppercase string representation of message level
+//   %e:  Standard error message (empty if errno == 0)
+//   %(:  Start of not-empty condition. Following text till the end of condition is
+//        printed only if at least one fields in it is not empty.
+//   %c(: Start of less than critical level condition.
+//   %C(: Start of critical level condition.
+//   %e(: Start of less than error level condition.
+//   %E(: Start of error or higher level condition.
+//   %w(: Start of less than warning level condition.
+//   %W(: Start of warning or higher level condition.
+//   %n(: Start of less than notice level condition.
+//   %N(: Start of notice or higher level condition.
+//   %i(: Start of less than info level condition.
+//   %I(: Start of info or higher level confition.
+//   %d(: Start of less than debug level condition.
+//   %D(: Start of debug or higher level condition.
+//   %):  End of condition block
+//   %%:  Plain %
 void log_add_output(log_t, FILE*, int flags, enum log_level, const char *format)
 	__attribute__((nonnull));
 

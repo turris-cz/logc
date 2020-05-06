@@ -42,12 +42,15 @@ enum format_fields {
 	FF_LEVEL_LOWCASE,
 	FF_STD_ERR,
 	FF_IF,
+	FF_IFLEVEL,
 	FF_IFEND,
 };
 
 struct format {
 	enum format_fields type;
 	char *text;
+	bool if_less_then;
+	enum log_level if_level;
 	struct format *next;
 };
 
@@ -68,24 +71,30 @@ struct _log {
 LOG(logc_internal)
 
 #define TEXT(TXT) .type = FF_TEXT, .text = (TXT), .next = &(struct format)
-#define NXT(TYPE) .type = TYPE, .next = &(struct format)
-static struct format def_format = (struct format){
+#define IFLEVEL(LESS_THEN, LEVEL) .type = FF_IFLEVEL, .if_less_then = (LESS_THEN), .if_level = LEVEL, .next = &(struct format)
+#define NXT(TYPE) .type = (TYPE), .next = &(struct format)
+static struct format def_format = (struct format){ // cppcheck-suppress "internalAstError"
 	NXT(FF_IF){
-		NXT(FF_NAME){
+		NXT(FF_IF){
+			NXT(FF_NAME){
+		NXT(FF_IFEND){
+		IFLEVEL(true, LL_DEBUG){
+			TEXT("("){
+			NXT(FF_SOURCE_FILE){
+			TEXT(":"){
+			NXT(FF_SOURCE_LINE){
+			TEXT(","){
+			NXT(FF_SOURCE_FUNC){
+			TEXT(")"){
+		NXT(FF_IFEND){
+		TEXT(": "){
 	NXT(FF_IFEND){
-	TEXT("("){
-	NXT(FF_SOURCE_FILE){
-	TEXT(":"){
-	NXT(FF_SOURCE_LINE){
-	TEXT(","){
-	NXT(FF_SOURCE_FUNC){
-	TEXT("): "){
 	NXT(FF_MESSAGE){
 	NXT(FF_IF){
 		TEXT(": "){
 		NXT(FF_STD_ERR){
 	.type = FF_IFEND, .next = NULL
-}}}}}}}}}}}}}}};
+}}}}}}}}}}}}}}}}}}}};
 #undef NXT
 #undef TEXT
 
@@ -236,7 +245,6 @@ static inline bool str_empty(const char *str) {
 static const struct format *if_seek_forward(const struct format *format, bool
 		no_log_name, bool no_msg, bool no_err) {
 	const struct format *init_format = format;
-	const struct format *end_format = format;
 	size_t depth = 0;
 	bool empty = true;
 	do {
@@ -260,24 +268,52 @@ static const struct format *if_seek_forward(const struct format *format, bool
 				empty = no_err;
 				break;
 			case FF_IF:
+			case FF_IFLEVEL:
 				depth++;
 				break;
 			case FF_IFEND:
 				depth--;
+				if (depth == 0)
+					return format;
 				break;
 		}
-		end_format = format;
 		format = format->next;
-	} while (empty && depth > 0);
-	return empty ? end_format : init_format;
+	} while (empty);
+	return init_format;
+}
+
+static const struct format *iflevel_seek_forward(const struct format *format,
+		enum log_level level) {
+	if (format->if_less_then ? level < format->if_level : level >= format->if_level)
+		return format;
+
+	size_t depth = 0;
+	do {
+		switch (format->type) {
+			case FF_IF:
+			case FF_IFLEVEL:
+				depth++;
+				break;
+			case FF_IFEND:
+				depth--;
+				if (depth == 0)
+					return format;
+				break;
+			default:
+				// Do nothing
+				break;
+		}
+		format = format->next;
+	} while (depth > 0);
 }
 
 void _log(log_t log, enum log_level level,
 		const char *file, size_t line, const char *func,
 		const char *format, ...) {
 	level = level_sanity(level);
+	enum log_level set_level = log->_log ? log->_log->level : log_level_from_env();
 	int stderrno = errno;
-	if (level < (log->_log ? log->_log->level : log_level_from_env()))
+	if (level < set_level)
 		return;
 
 	va_list args;
@@ -351,6 +387,9 @@ void _log(log_t log, enum log_level level,
 				case FF_IF:
 					format = if_seek_forward(format, str_empty(log->name),
 							msg_size == 0, stderrno == 0);
+					break;
+				case FF_IFLEVEL:
+					format = iflevel_seek_forward(format, set_level);
 					break;
 				case FF_IFEND:
 					// Everything already done in FF_IF

@@ -54,41 +54,33 @@ static void stderr_teardown() {
 }
 
 START_TEST(simple_warning) {
-	char *expected;
-	int len = asprintf(&expected, "tlog(%s:%d,%s): This is warning!\n", __FILE__, __LINE__ + 1, __func__);
 	WARNING("This is warning!");
 
 	fflush(stderr);
-	ck_assert_str_eq(expected, stderr_data);
-	ck_assert_int_eq(len, stderr_len);
-	free(expected);
+	ck_assert_str_eq("tlog: This is warning!\n", stderr_data);
 }
 END_TEST
 
 START_TEST(check_default_level) {
-	char *expected;
-	int len = asprintf(&expected, "tlog(%s:%d,%s): This is message!\n", __FILE__, __LINE__ + 1, __func__);
 	log(tlog, _i, "This is message!");
 
 	fflush(stderr);
-	if (_i >= LL_NOTICE) {
-		ck_assert_str_eq(expected, stderr_data);
-		ck_assert_int_eq(len, stderr_len);
-	} else {
+	if (_i >= LL_NOTICE)
+		ck_assert_str_eq("tlog: This is message!\n", stderr_data);
+	else
 		ck_assert_str_eq("", stderr_data);
-		ck_assert_int_eq(0, stderr_len);
-	}
-	free(expected);
 }
 END_TEST
 
 START_TEST(check_all_levels) {
 	log_set_level(tlog, LL_TRACE);
-	char *expected;
-	int len = asprintf(&expected, "tlog(%s:%d,%s): This is message!\n", __FILE__, __LINE__ + 1, __func__);
+	const int line = __LINE__ + 1;
 	log(tlog, _i, "This is message!");
 
 	fflush(stderr);
+	char *expected;
+	int len = asprintf(&expected, "tlog(%s:%d,%s): This is message!\n",
+			__FILE__, line, __func__);
 	ck_assert_str_eq(expected, stderr_data);
 	ck_assert_int_eq(len, stderr_len);
 	free(expected);
@@ -97,25 +89,21 @@ END_TEST
 
 START_TEST(app_log) {
 	APP_LOG(tlog);
-	char *expected;
-	int len = asprintf(&expected, "(%s:%d,%s): This is error!\n", __FILE__, __LINE__ + 1, __func__);
 	error(log_tlog, "This is error!");
 
 	fflush(stderr);
-	ck_assert_str_eq(expected, stderr_data);
-	ck_assert_int_eq(len, stderr_len);
-	free(expected);
+	ck_assert_str_eq("This is error!\n", stderr_data);
 }
 END_TEST
 
 START_TEST(standard_error) {
-	char *expected;
-	int len = asprintf(&expected, "tlog(%s:%d,%s): This is error: %s\n", __FILE__, __LINE__ + 2, __func__, strerror(ENOENT));
 	errno = ENOENT;
 	ERROR("This is error");
 	ck_assert_int_eq(0, errno); // call should reset errno
 
 	fflush(stderr);
+	char *expected;
+	int len = asprintf(&expected, "tlog: This is error: %s\n", strerror(ENOENT));
 	ck_assert_str_eq(expected, stderr_data);
 	ck_assert_int_eq(len, stderr_len);
 	free(expected);
@@ -128,15 +116,11 @@ START_TEST(call_verbose) {
 
 	ck_assert_int_eq(LL_DEBUG, log_level(tlog));
 
-	char *expected;
-	int len = asprintf(&expected, "tlog(%s:%d,%s): This is debug!\n", __FILE__, __LINE__ + 1, __func__);
 	DEBUG("This is debug!");
 	TRACE("This is trace!"); // should not print
 
 	fflush(stderr);
-	ck_assert_str_eq(expected, stderr_data);
-	ck_assert_int_eq(len, stderr_len);
-	free(expected);
+	ck_assert_str_eq("tlog: This is debug!\n", stderr_data);
 }
 END_TEST
 
@@ -146,15 +130,11 @@ START_TEST(call_quiet) {
 
 	ck_assert_int_eq(LL_ERROR, log_level(tlog));
 
-	char *expected;
-	int len = asprintf(&expected, "tlog(%s:%d,%s): This is error!\n", __FILE__, __LINE__ + 1, __func__);
 	ERROR("This is error!");
 	WARNING("This is warning!"); // should not print
 
 	fflush(stderr);
-	ck_assert_str_eq(expected, stderr_data);
-	ck_assert_int_eq(len, stderr_len);
-	free(expected);
+	ck_assert_str_eq("tlog: This is error!\n", stderr_data);
 }
 END_TEST
 
