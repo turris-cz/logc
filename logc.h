@@ -135,8 +135,6 @@ void _log(log_t, enum log_level,
 #define info(LOG, ...) log(LOG, LL_INFO, __VA_ARGS__)
 #define debug(LOG, ...) log(LOG, LL_DEBUG, __VA_ARGS__)
 #define trace(LOG, ...) log(LOG, LL_TRACE, __VA_ARGS__)
-#define not_implemented(LOG) critical(LOG, "%s not implemented yet", __func__)
-#define std_ignore(LOG, STD) do { if (STD == -1) trace(LOG, "Expected fail: %s", #STD); } while (0)
 
 #endif
 
@@ -152,8 +150,6 @@ void _log(log_t, enum log_level,
 #define INFO(...) info(DEFLOG, __VA_ARGS__)
 #define DEBUG(...) debug(DEFLOG, __VA_ARGS__)
 #define TRACE(...) trace(DEFLOG, __VA_ARGS__)
-#define NOT_IMPLEMENTED not_implemented(DEFLOG)
-#define STD_IGNORE(STD) std_ignore(DEFLOG, STD)
 
 #endif
 #endif

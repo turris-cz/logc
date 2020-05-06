@@ -2,8 +2,9 @@ ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = liblogc.la
 liblogc_la_SOURCES = logc.c
+liblogc_la_CFLAGS = -isystem %reldir%
 
-include_HEADERS = logc.h logc_assert.h
+include_HEADERS = logc.h logc_util.h
 pkgconfig_DATA = logc.pc
 
 

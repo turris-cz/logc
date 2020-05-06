@@ -19,7 +19,8 @@
  * SOFTWARE.
  */
 #define DEFLOG log_logc_internal
-#include "logc.h"
+#include <logc.h>
+#include <logc_util.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
