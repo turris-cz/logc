@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
 #include <syslog.h>
 #include <unistd.h>
 
@@ -38,6 +39,7 @@ enum format_fields {
 	FF_SOURCE_LINE,
 	FF_SOURCE_FUNC,
 	FF_LEVEL,
+	FF_LEVEL_LOWCASE,
 	FF_STD_ERR,
 	FF_IF,
 	FF_IFEND,
@@ -336,6 +338,12 @@ void _log(log_t log, enum log_level level,
 				case FF_LEVEL:
 					fputs(levels[level].name, f);
 					break;
+				case FF_LEVEL_LOWCASE: {
+						const char *name = levels[level].name;
+						while (*name != '\0')
+							putc(tolower(*name++), f);
+						break;
+					}
 				case FF_STD_ERR:
 					if (stderrno)
 						fputs(strerror(stderrno), f);
