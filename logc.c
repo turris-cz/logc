@@ -42,22 +42,33 @@ enum format_fields {
 	FF_LEVEL_LOWCASE,
 	FF_STD_ERR,
 	FF_IF,
-	FF_IFLEVEL,
 	FF_IFEND,
+};
+
+enum format_if_condition {
+	FIFC_NON_EMPTY,
+	FIFC_LEVEL,
+	FIFC_TERMINAL,
+	FIFC_COLORED,
 };
 
 struct format {
 	enum format_fields type;
+
 	char *text;
-	bool if_less_then;
+
+	enum format_if_condition condition;
+	bool if_invert;
 	enum log_level if_level;
+
 	struct format *next;
 };
 
 struct log_output {
 	FILE *f;
-	int flags;
 	struct format *format;
+	bool use_colors;
+	bool is_terminal;
 };
 
 struct _log {
@@ -67,18 +78,34 @@ struct _log {
 	bool no_stderr;
 };
 
+static const  struct level_info {
+	const char *name;
+	int syslog_prio;
+	const char *color;
+} levels_info[] = {
+	[LL_CRITICAL] = { "CRITICAL", LOG_CRIT, "\033[31;1m" },
+	[LL_ERROR] = { "ERROR", LOG_ERR, "\033[31m" },
+	[LL_WARNING] = { "WARNING", LOG_WARNING, "\033[35m" },
+	[LL_NOTICE] = { "NOTICE", LOG_NOTICE, "\033[34m" },
+	[LL_INFO] = { "INFO", LOG_INFO, "\033[34m" },
+	[LL_DEBUG] = { "DEBUG", LOG_DEBUG, "\033[37;1m" },
+	[LL_TRACE] = { "TRACE", LOG_DEBUG, "\033[37m" }
+};
+static const char *color_reset = "\033[0m";
+
 
 LOG(logc_internal)
 
 #define TEXT(TXT) .type = FF_TEXT, .text = (TXT), .next = &(struct format)
-#define IFLEVEL(LESS_THEN, LEVEL) .type = FF_IFLEVEL, .if_less_then = (LESS_THEN), .if_level = LEVEL, .next = &(struct format)
+#define IF(CONDITION, INVERT, LEVEL) .type = FF_IF, .condition = (CONDITION), \
+		.if_invert = (INVERT), .if_level = (LEVEL), .next = &(struct format)
 #define NXT(TYPE) .type = (TYPE), .next = &(struct format)
 static struct format def_format = (struct format){ // cppcheck-suppress "internalAstError"
-	NXT(FF_IF){
-		NXT(FF_IF){
+	IF(FIFC_NON_EMPTY, false, 0){
+		IF(FIFC_NON_EMPTY, false, 0){
 			NXT(FF_NAME){
 		NXT(FF_IFEND){
-		IFLEVEL(true, LL_DEBUG){
+		IF(FIFC_LEVEL, true, LL_DEBUG){
 			TEXT("("){
 			NXT(FF_SOURCE_FILE){
 			TEXT(":"){
@@ -90,7 +117,7 @@ static struct format def_format = (struct format){ // cppcheck-suppress "interna
 		TEXT(": "){
 	NXT(FF_IFEND){
 	NXT(FF_MESSAGE){
-	NXT(FF_IF){
+	IF(FIFC_NON_EMPTY, false, 0){
 		TEXT(": "){
 		NXT(FF_STD_ERR){
 	.type = FF_IFEND, .next = NULL
@@ -158,7 +185,7 @@ void log_quiet(log_t log) {
 	log->_log->level = level_sanity(++log->_log->level);
 }
 
-static struct format_t *parse_format(const char *format) {
+static struct format *parse_format(const char *format) {
 	NOT_IMPLEMENTED;
 }
 
@@ -169,6 +196,26 @@ static void free_format(struct format *f) {
 		free(tmp->text);
 		free(tmp);
 	}
+}
+
+static struct log_output *new_log_output(FILE *f, const char *format, int flags) {
+	struct log_output *out = malloc(sizeof *out);
+	*out = (typeof(*out)){
+		.f = f,
+		//.format = parse_format(format),
+		.format = &def_format, // TODO for now we use default one
+		.use_colors = (flags & LOG_F_COLORS) && !(flags & LOG_F_NO_COLORS),
+		.is_terminal = false,
+	};
+
+	int fd = fileno(f);
+	if (fd != -1)
+		out->is_terminal = isatty(fd);
+
+	if (!(flags & (LOG_F_NO_COLORS | LOG_F_COLORS)))
+		out->use_colors = out->is_terminal;
+
+	return out;
 }
 
 void log_add_output(log_t log, FILE *file, int flags, enum log_level level, const char *format) {
@@ -210,45 +257,61 @@ void log_unchain(log_t master, log_t slave) {
 }
 
 
-struct level_info {
-	const char *name;
-	int syslog_prio;
-	const char *color;
-};
-
-static const struct level_info levels[] = {
-	[LL_CRITICAL] = { "CRITICAL", LOG_CRIT, "\033[31;1m" },
-	[LL_ERROR] = { "ERROR", LOG_ERR, "\033[31m" },
-	[LL_WARNING] = { "WARNING", LOG_WARNING, "\033[35m" },
-	[LL_NOTICE] = { "NOTICE", LOG_NOTICE, "\033[34m" },
-	[LL_INFO] = { "INFO", LOG_INFO, "\033[34m" },
-	[LL_DEBUG] = { "DEBUG", LOG_DEBUG, "\033[37;1m" },
-	[LL_TRACE] = { "TRACE", LOG_DEBUG, "\033[37m" }
-};
-static const char *color_reset = "\033[0m";
-
-static inline bool use_colors(FILE *f, int flags) {
-	if (flags & LOG_F_NO_COLORS)
-		return false;
-	if (flags & LOG_F_COLORS)
-		return true;
-	int fd = fileno(f);
-	if (fd == -1)
-		return false;
-	return isatty(fd);
+static struct log_output *default_stderr_output() {
+	static struct log_output *out = NULL;
+	if (out == NULL)
+		out = new_log_output(stderr, LOG_FORMAT_SOURCE, 0);
+	return out;
 }
 
 static inline bool str_empty(const char *str) {
 	return !str || *str == '\0';
 }
 
-static const struct format *if_seek_forward(const struct format *format, bool
-		no_log_name, bool no_msg, bool no_err) {
-	const struct format *init_format = format;
-	size_t depth = 0;
-	bool empty = true;
-	do {
-		switch (format->type) {
+static const struct format *if_seek_forward(const struct format *format,
+		enum log_level set_level, bool is_term, bool colors,
+		bool no_log_name, bool no_msg, bool no_err) {
+	bool not_empty_check = true;
+	bool skip = false;
+	switch (format->condition) {
+		case FIFC_NON_EMPTY:
+			not_empty_check = false;
+			break;
+		case FIFC_LEVEL:
+			skip = set_level >= format->if_level;
+			break;
+		case FIFC_TERMINAL:
+			skip = !is_term;
+			break;
+		case FIFC_COLORED:
+			skip = !colors;
+	}
+
+	if (not_empty_check) {
+		if (skip != format->if_invert)
+			return format;
+
+		size_t depth = 0;
+		while (true) {
+			switch (format->type) {
+				case FF_IF:
+					depth++;
+					break;
+				case FF_IFEND:
+					depth--;
+					if (depth == 0)
+						return format;
+				default: // ignore anything else
+					break;
+			}
+			format = format->next;
+		};
+	}
+
+	size_t depth = 1;
+	for (const struct format *f = format->next; ; f = f->next) {
+		bool empty = true;
+		switch (f->type) {
 			case FF_TEXT:
 				// We ignore text as that is part of format and not expanded field
 				break;
@@ -262,49 +325,27 @@ static const struct format *if_seek_forward(const struct format *format, bool
 			case FF_SOURCE_LINE:
 			case FF_SOURCE_FUNC:
 			case FF_LEVEL:
-				// We always have these
+			case FF_LEVEL_LOWCASE:
+				empty = false; // We always have these
 				break;
 			case FF_STD_ERR:
 				empty = no_err;
 				break;
 			case FF_IF:
-			case FF_IFLEVEL:
-				depth++;
+				// Use recurse to skip to FF_IFEND if condition is satisfied
+				f = if_seek_forward(f, set_level, is_term, colors, no_log_name, no_msg, no_err);
+				if (f->type == FF_IF)
+					depth++;
 				break;
 			case FF_IFEND:
 				depth--;
 				if (depth == 0)
-					return format;
+					return f;
 				break;
 		}
-		format = format->next;
-	} while (empty);
-	return init_format;
-}
-
-static const struct format *iflevel_seek_forward(const struct format *format,
-		enum log_level level) {
-	if (format->if_less_then ? level < format->if_level : level >= format->if_level)
-		return format;
-
-	size_t depth = 0;
-	do {
-		switch (format->type) {
-			case FF_IF:
-			case FF_IFLEVEL:
-				depth++;
-				break;
-			case FF_IFEND:
-				depth--;
-				if (depth == 0)
-					return format;
-				break;
-			default:
-				// Do nothing
-				break;
-		}
-		format = format->next;
-	} while (depth > 0);
+		if (!empty)
+			return format;
+	}
 }
 
 void _log(log_t log, enum log_level level,
@@ -325,18 +366,8 @@ void _log(log_t log, enum log_level level,
 	vsprintf(msg, format, args);
 	va_end(args);
 
-	struct log_output def_stderr = (struct log_output) {
-		.f = stderr,
-		.flags = 0,
-		.format = &def_format
-	};
-
 	size_t cnt = 1;
-	struct log_output *outs = &(struct log_output) {
-		.f = stderr,
-		.flags = 0,
-		.format = &def_format
-	};
+	struct log_output *outs = default_stderr_output();
 	if (log->_log) {
 		if (log->_log->outs_cnt) {
 			cnt = log->_log->outs_cnt;
@@ -346,10 +377,10 @@ void _log(log_t log, enum log_level level,
 	}
 
 	for (size_t i = 0; i < cnt; i++) {
-		FILE *f = outs[i].f;
-		bool colors = use_colors(f, outs[i].flags);
-		if (colors)
-			fputs(levels[level].color, f);
+		struct log_output *out = outs + i;
+		FILE *f = out->f;
+		if (out->use_colors)
+			fputs(levels_info[level].color, f);
 		const struct format *format = outs[i].format ?: &def_format;
 		do {
 			switch (format->type) {
@@ -372,10 +403,10 @@ void _log(log_t log, enum log_level level,
 					fputs(func, f);
 					break;
 				case FF_LEVEL:
-					fputs(levels[level].name, f);
+					fputs(levels_info[level].name, f);
 					break;
 				case FF_LEVEL_LOWCASE: {
-						const char *name = levels[level].name;
+						const char *name = levels_info[level].name;
 						while (*name != '\0')
 							putc(tolower(*name++), f);
 						break;
@@ -385,11 +416,9 @@ void _log(log_t log, enum log_level level,
 						fputs(strerror(stderrno), f);
 					break;
 				case FF_IF:
-					format = if_seek_forward(format, str_empty(log->name),
+					format = if_seek_forward(format, set_level, out->is_terminal,
+							out->use_colors, str_empty(log->name),
 							msg_size == 0, stderrno == 0);
-					break;
-				case FF_IFLEVEL:
-					format = iflevel_seek_forward(format, set_level);
 					break;
 				case FF_IFEND:
 					// Everything already done in FF_IF
@@ -397,7 +426,7 @@ void _log(log_t log, enum log_level level,
 			}
 			format = format->next;
 		} while (format);
-		if (colors)
+		if (out->use_colors)
 			fputs(color_reset, f);
 		fputc('\n', f);
 	}
