@@ -60,7 +60,7 @@ void log_quiet(log_t) __attribute__((nonnull));
 //// Some standard output formats ////////////////////////////////////////////////
 #define LOG_FORMAT_PLAIN "%(%n: %)%m%(: %e%)"
 #define LOG_FORMAT_SOURCE "%(%(%n%)%d((%f:%i,%c)%): %)%m%(: %e%)"
-#define LOG_FORMAT_FULL "%L:%(%n%)%d((%f:%i,%c)%): %m%(: %e%)"
+#define LOG_FORMAT_FULL "%L:%(%n%)(%f:%i,%c): %m%(: %e%)"
 
 //// Output to FILE //////////////////////////////////////////////////////////////
 // Output no colors even when output is detected as capable terminal
@@ -83,8 +83,9 @@ void log_quiet(log_t) __attribute__((nonnull));
 //   %l:  Lowercase string representation of message level
 //   %L:  Uppercase string representation of message level
 //   %e:  Standard error message (empty if errno == 0)
-//   %(:  Start of not-empty condition. Following text till the end of condition is
-//        printed only if at least one fields in it is not empty.
+//   %(:  Start of not-empty condition. Following text till the end of condition
+//        is printed only if at least one field in it is not empty. It ignores
+//        any constant text and conditions are not considered as field.
 //   %c(: Start of less than critical level condition.
 //   %C(: Start of critical level condition.
 //   %e(: Start of less than error level condition.
@@ -97,6 +98,14 @@ void log_quiet(log_t) __attribute__((nonnull));
 //   %I(: Start of info or higher level confition.
 //   %d(: Start of less than debug level condition.
 //   %D(: Start of debug or higher level condition.
+//   %t(: Start of not terminal output condition. Text in condition is printed
+//         only if output is not to terminal.
+//   %T(: Start of terminal output condition. Text in condition is printed only if
+//        output is to terminal.
+//   %p(: Start of not colored output condition. Text in condition is printed only
+//        if colors are not used.
+//   %P(: Start of colored output condition. Text in condition is printed only if 
+//        colors are used in output.
 //   %):  End of condition block
 //   %%:  Plain %
 void log_add_output(log_t, FILE*, int flags, enum log_level, const char *format)
