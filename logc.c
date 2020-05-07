@@ -259,7 +259,7 @@ void log_unchain(log_t master, log_t slave) {
 
 static struct log_output *default_stderr_output() {
 	static struct log_output *out = NULL;
-	if (out == NULL)
+	if (out == NULL || out->f == stderr)
 		out = new_log_output(stderr, LOG_FORMAT_SOURCE, 0);
 	return out;
 }
