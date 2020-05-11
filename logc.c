@@ -185,6 +185,12 @@ void log_quiet(log_t log) {
 	log->_log->level = level_sanity(++log->_log->level);
 }
 
+bool log_would_log(log_t log, enum log_level level) {
+	level = level_sanity(level);
+	enum log_level set_level = log->_log ? log->_log->level : log_level_from_env();
+	return level >= set_level;
+}
+
 static struct format *parse_format(const char *format) {
 	NOT_IMPLEMENTED;
 }

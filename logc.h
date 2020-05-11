@@ -57,6 +57,12 @@ void log_set_level(log_t, enum log_level) __attribute__((nonnull));
 void log_verbose(log_t) __attribute__((nonnull));
 void log_quiet(log_t) __attribute__((nonnull));
 
+// Check verbosity level to check if output would be used for given level.
+// This should be used when message requires significant processing before logc is
+// called.
+// Returns true if message would be outputed and false if not.
+bool log_would_log(log_t, enum log_level);
+
 //// Some standard output formats ////////////////////////////////////////////////
 #define LOG_FORMAT_PLAIN "%(%n: %)%m%(: %e%)"
 #define LOG_FORMAT_SOURCE "%(%(%n%)%d((%f:%i,%c)%): %)%m%(: %e%)"

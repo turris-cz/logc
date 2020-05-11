@@ -138,6 +138,14 @@ START_TEST(call_quiet) {
 }
 END_TEST
 
+START_TEST(check_would_log) {
+	log_set_level(tlog, _i);
+
+	for (enum log_level level = LL_TRACE; level < LL_CRITICAL; level++)
+		ck_assert(log_would_log(tlog, level) == (level >= _i));
+}
+END_TEST
+
 
 void logc_tests(Suite *suite) {
 	TCase *def_output = tcase_create("default output");
@@ -150,4 +158,9 @@ void logc_tests(Suite *suite) {
 	tcase_add_test(def_output, call_verbose);
 	tcase_add_test(def_output, call_quiet);
 	suite_add_tcase(suite, def_output);
+
+	TCase *would_log = tcase_create("would log check");
+	tcase_add_checked_fixture(would_log, setup_tlog, teardown_tlog);
+	tcase_add_loop_test(would_log, check_would_log, LL_TRACE, LL_CRITICAL);
+	suite_add_tcase(suite, would_log);
 }
