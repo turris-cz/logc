@@ -1,11 +1,15 @@
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = liblogc.la
+lib_LTLIBRARIES = liblogc.la liblogc_argp.la
+
 liblogc_la_SOURCES = logc.c
 liblogc_la_CFLAGS = -isystem %reldir%
 
-include_HEADERS = logc.h logc_util.h
-pkgconfig_DATA = logc.pc
+liblogc_argp_la_SOURCES = logc_argp.c
+liblogc_argp_la_CFLAGS = -isystem %reldir%
+
+include_HEADERS = logc.h logc_util.h logc_argp.h
+pkgconfig_DATA = logc.pc logc_argp.pc
 
 
 gperf_files = envlog.gperf.c

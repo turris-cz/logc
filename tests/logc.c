@@ -139,9 +139,7 @@ START_TEST(call_quiet) {
 END_TEST
 
 
-Suite *logc_test_suite(void) {
-	Suite *suite = suite_create("logc");
-
+void logc_tests(Suite *suite) {
 	TCase *def_output = tcase_create("default output");
 	tcase_add_checked_fixture(def_output, stderr_setup, stderr_teardown);
 	tcase_add_test(def_output, simple_warning);
@@ -152,6 +150,4 @@ Suite *logc_test_suite(void) {
 	tcase_add_test(def_output, call_verbose);
 	tcase_add_test(def_output, call_quiet);
 	suite_add_tcase(suite, def_output);
-
-	return suite;
 }

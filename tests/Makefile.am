@@ -4,11 +4,13 @@ TESTS = %reldir%/unittests
 check_PROGRAMS = %reldir%/unittests
 %canon_reldir%_unittests_SOURCES = \
 	%reldir%/unittests.c \
-	%reldir%/logc.c
+	%reldir%/logc.c \
+	%reldir%/logc_argp.c
 %canon_reldir%_unittests_CFLAGS = \
 	$(CHECK_FLAGS)
 %canon_reldir%_unittests_LDADD = \
 	$(builddir)/liblogc.la \
+	$(builddir)/liblogc_argp.la \
 	$(CHECK_LIBS)
 
 ## Valgrind

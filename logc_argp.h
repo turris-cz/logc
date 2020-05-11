@@ -18,11 +18,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __TEST_LOGC_H_
-#define __TEST_LOGC_H_
-#include <check.h>
+#ifndef _LOGC_ARGP_H_
+#define _LOGC_ARGP_H_
+#include <argp.h>
+#include <logc.h>
 
-void logc_tests(Suite*);
-void logc_argp_tests(Suite*);
+/* This implements common arguments parsering for programs usign LogC.
+ * It provides full set of arguments that allow user fully control LogC parser.
+ *
+ * To use it just simply include logc_arpg_parser as child parser in your
+ * argp_parser definition and set logc_argp_log to your APP_LOG instance.
+ */
+
+extern const struct argp logc_argp_parser;
+extern log_t logc_argp_log;
 
 #endif

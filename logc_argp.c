@@ -18,11 +18,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __TEST_LOGC_H_
-#define __TEST_LOGC_H_
-#include <check.h>
+#include <logc_argp.h>
+#include <logc.h>
 
-void logc_tests(Suite*);
-void logc_argp_tests(Suite*);
+log_t logc_argp_log = NULL;
 
-#endif
+static const struct argp_option options[] = {
+	{"verbose", 'v', NULL, 0, "Increase output verbosity", 1},
+	{"quiet", 'q', NULL, 0, "Decrease output verbosity", 1},
+	{NULL}
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+	switch (key) {
+		case 'v':
+			log_verbose(logc_argp_log);
+			break;
+		case 'q':
+			log_quiet(logc_argp_log);
+			break;
+		default:
+			return ARGP_ERR_UNKNOWN;
+	};
+	return 0;
+}
+
+const struct argp logc_argp_parser = {
+	.options = options,
+	.parser = parse_opt,
+};

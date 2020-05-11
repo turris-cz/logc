@@ -128,7 +128,7 @@ static struct format def_format = (struct format){ // cppcheck-suppress "interna
 
 static void free_format(struct format*);
 
-inline enum log_level level_sanity(enum log_level l) {
+inline enum log_level level_sanity(int l) {
 	return l > LL_CRITICAL ? LL_CRITICAL : l < LL_TRACE ? LL_TRACE : l;
 }
 

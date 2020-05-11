@@ -19,11 +19,14 @@
  * SOFTWARE.
  */
 #include <check.h>
-#include "logc.h"
 #include <stdio.h>
+#include "logc.h"
 
 int main(void) {
-	Suite *suite = logc_test_suite();
+	Suite *suite = suite_create("LogC");
+
+	logc_tests(suite);
+	logc_argp_tests(suite);
 
 	SRunner *runner = srunner_create(suite);
 	srunner_set_fork_status(runner, CK_FORK); // We have to fork to catch signals
