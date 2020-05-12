@@ -1,0 +1,55 @@
+%compare-lengths
+%compare-strncmp
+
+%pic
+%null-strings
+%readonly-tables
+%switch=1
+%language=ANSI-C
+
+%define hash-function-name gperf_format_hash
+%define lookup-function-name gperf_format
+%define string-pool-name gperf_format_id_string
+%define slot-name id
+%define constants-prefix FORMAT
+
+%delimiters=|
+
+%struct-type
+%{
+struct gperf_format {
+    int id;
+    struct format f;
+};
+%}
+
+struct gperf_format;
+
+%%
+m| { .type = FF_MESSAGE }
+n| { .type = FF_NAME }
+f| { .type = FF_SOURCE_FILE }
+i| { .type = FF_SOURCE_LINE }
+c| { .type = FF_SOURCE_FUNC }
+L| { .type = FF_LEVEL }
+l| { .type = FF_LEVEL_LOWCASE }
+e| { .type = FF_STD_ERR }
+)| { .type = FF_IFEND }
+(_| { .type = FF_IF, .condition = FIFC_NON_EMPTY }
+(C| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_CRITICAL }
+(c| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_CRITICAL, .if_invert = true }
+(E| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_ERROR }
+(e| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_ERROR, .if_invert = true }
+(W| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_WARNING }
+(w| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_WARNING, .if_invert = true }
+(N| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_NOTICE }
+(n| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_NOTICE, .if_invert = true }
+(I| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_INFO }
+(i| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_INFO, .if_invert = true }
+(D| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_DEBUG }
+(d| { .type = FF_IF, .condition = FIFC_LEVEL, .if_level = LL_DEBUG, .if_invert = true }
+(T| { .type = FF_IF, .condition = FIFC_TERMINAL }
+(t| { .type = FF_IF, .condition = FIFC_TERMINAL, .if_invert = true }
+(P| { .type = FF_IF, .condition = FIFC_COLORED }
+(p| { .type = FF_IF, .condition = FIFC_COLORED, .if_invert = true }
+%%

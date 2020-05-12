@@ -1,13 +1,19 @@
 %ignore-case
-%language=C
+
+%pic
+%readonly-tables
+%language=ANSI-C
+
 %define hash-function-name gperf_envlog_hash
 %define lookup-function-name gperf_envlog
 %define string-pool-name gperf_envlog_id_string
-%struct-type
+%define slot-name id
+%define constants-prefix ENVLOG
 
+%struct-type
 %{
 struct envlog_level {
-    const char *name;
+    int id;
     enum log_level level;
 };
 %}

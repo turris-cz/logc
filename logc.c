@@ -110,7 +110,7 @@ static enum log_level log_level_from_env() {
 	static enum log_level level = undef;
 	if (level == undef) {
 		char *envlog = getenv(ENV_LOG_VAR);
-		struct envlog_level *envlevel = gperf_envlog(envlog, envlog ? strlen(envlog) : 0);
+		const struct envlog_level *envlevel = gperf_envlog(envlog, envlog ? strlen(envlog) : 0);
 		level = envlevel ? ((envlevel->level) ?: DEFAULT_LOG_LEVEL) : DEFAULT_LOG_LEVEL;
 	}
 	return level;
@@ -162,108 +162,23 @@ bool log_would_log(log_t log, enum log_level level) {
 	return level >= set_level;
 }
 
+#include "format.gperf.c"
+
 static struct format *parse_format(const char *format) {
 	struct format *first = NULL;
-	struct format *f = NULL;
-	bool plain_text = false;
+	struct format *f;
 	while (*format != '\0') {
 		struct format *new = malloc(sizeof *new);
-
-		if (!plain_text && *format == '%') {
-			memset(new, 0, sizeof *new);
-			switch (*++format) {
-				case 'm':
-					new->type = FF_MESSAGE;
-					break;
-				case 'n':
-					new->type = FF_NAME;
-					break;
-				case 'f':
-					new->type = FF_SOURCE_FILE;
-					break;
-				case 'i':
-					new->type = FF_SOURCE_LINE;
-					break;
-				case 'c':
-					new->type = FF_SOURCE_FUNC;
-					break;
-				case 'L':
-					new->type = FF_LEVEL;
-					break;
-				case 'l':
-					new->type = FF_LEVEL_LOWCASE;
-					break;
-				case 'e':
-					new->type = FF_STD_ERR;
-					break;
-				case '(':
-					new->type = FF_IF;
-					switch (*++format) {
-						case '_':
-							new->condition = FIFC_NON_EMPTY;
-							break;
-						case 'c':
-							new->if_invert = true;
-						case 'C':
-							new->condition = FIFC_LEVEL;
-							new->if_level = LL_CRITICAL;
-							break;
-						case 'e':
-							new->if_invert = true;
-						case 'E':
-							new->condition = FIFC_LEVEL;
-							new->if_level = LL_ERROR;
-							break;
-						case 'w':
-							new->if_invert = true;
-						case 'W':
-							new->condition = FIFC_LEVEL;
-							new->if_level = LL_WARNING;
-							break;
-						case 'n':
-							new->if_invert = true;
-						case 'N':
-							new->condition = FIFC_LEVEL;
-							new->if_level = LL_NOTICE;
-							break;
-						case 'i':
-							new->if_invert = true;
-						case 'I':
-							new->condition = FIFC_LEVEL;
-							new->if_level = LL_INFO;
-							break;
-						case 'd':
-							new->if_invert = true;
-						case 'D':
-							new->condition = FIFC_LEVEL;
-							new->if_level = LL_DEBUG;
-							break;
-						case 't':
-							new->if_invert = true;
-						case 'T':
-							new->condition = FIFC_TERMINAL;
-							break;
-						case 'p':
-							new->if_invert = true;
-						case 'P':
-							new->condition = FIFC_COLORED;
-							break;
-					}
-					break;
-				case ')':
-					new->type = FF_IFEND;
-					break;
-				case '%':
-					// This is suppose to be plain %
-					// Just restart evaluation from next character.
-					free(new);
-					plain_text = true;
-					continue;
-				default:
-					// TODO better just consider it as plain string
-					CRITICAL("Unknown %% code for '%c': %s", *format, format);
+		if (*format == '%' && *++format != '%') {
+			const struct gperf_format *fg;
+			size_t len = 0;
+			do fg = gperf_format(format, ++len); while (!fg && len <= 2);
+			if (fg == NULL) { // Ignore any unknown code for future compatibility
+				free(new);
+				continue;
 			}
-			format++;
+			*new = fg->f;
+			format += len;
 		} else {
 			const char *next = strchrnul(format, '%');
 			*new = (struct format){
@@ -272,8 +187,7 @@ static struct format *parse_format(const char *format) {
 			};
 			format = next;
 		}
-
-		if (f)
+		if (first)
 			f->next = new;
 		else
 			first = new;
@@ -326,6 +240,10 @@ bool log_rm_output(log_t log, FILE *file) {
 }
 
 void log_wipe_outputs(log_t log) {
+	NOT_IMPLEMENTED;
+}
+
+void log_no_output(log_t log) {
 	NOT_IMPLEMENTED;
 }
 
