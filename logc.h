@@ -64,9 +64,9 @@ void log_quiet(log_t) __attribute__((nonnull));
 bool log_would_log(log_t, enum log_level);
 
 //// Some standard output formats ////////////////////////////////////////////////
-#define LOG_FORMAT_PLAIN "%(%n: %)%m%(: %e%)"
-#define LOG_FORMAT_SOURCE "%(%(%n%)%d((%f:%i,%c)%): %)%m%(: %e%)"
-#define LOG_FORMAT_FULL "%L:%(%n%)(%f:%i,%c): %m%(: %e%)"
+#define LOG_FORMAT_PLAIN "%(_%n: %)%m%(: %e%)"
+#define LOG_FORMAT_SOURCE "%(_%(_%n%)%(d(%f:%i,%c)%): %)%m%(_: %e%)"
+#define LOG_FORMAT_FULL "%L:%(_%n%)(%f:%i,%c): %m%(_: %e%)"
 
 //// Output to FILE //////////////////////////////////////////////////////////////
 // Output no colors even when output is detected as capable terminal
@@ -89,28 +89,28 @@ bool log_would_log(log_t, enum log_level);
 //   %l:  Lowercase string representation of message level
 //   %L:  Uppercase string representation of message level
 //   %e:  Standard error message (empty if errno == 0)
-//   %(:  Start of not-empty condition. Following text till the end of condition
+//   %(_:  Start of not-empty condition. Following text till the end of condition
 //        is printed only if at least one field in it is not empty. It ignores
 //        any constant text and conditions are not considered as field.
-//   %c(: Start of less than critical level condition.
-//   %C(: Start of critical level condition.
-//   %e(: Start of less than error level condition.
-//   %E(: Start of error or higher level condition.
-//   %w(: Start of less than warning level condition.
-//   %W(: Start of warning or higher level condition.
-//   %n(: Start of less than notice level condition.
-//   %N(: Start of notice or higher level condition.
-//   %i(: Start of less than info level condition.
-//   %I(: Start of info or higher level confition.
-//   %d(: Start of less than debug level condition.
-//   %D(: Start of debug or higher level condition.
-//   %t(: Start of not terminal output condition. Text in condition is printed
+//   %(c: Start of less than critical level condition.
+//   %(C: Start of critical level condition.
+//   %(e: Start of less than error level condition.
+//   %(E: Start of error or higher level condition.
+//   %(w: Start of less than warning level condition.
+//   %(W: Start of warning or higher level condition.
+//   %(n: Start of less than notice level condition.
+//   %(N: Start of notice or higher level condition.
+//   %(i: Start of less than info level condition.
+//   %(I: Start of info or higher level confition.
+//   %(d: Start of less than debug level condition.
+//   %(D: Start of debug or higher level condition.
+//   %(t: Start of not terminal output condition. Text in condition is printed
 //         only if output is not to terminal.
-//   %T(: Start of terminal output condition. Text in condition is printed only if
+//   %(T: Start of terminal output condition. Text in condition is printed only if
 //        output is to terminal.
-//   %p(: Start of not colored output condition. Text in condition is printed only
+//   %(p: Start of not colored output condition. Text in condition is printed only
 //        if colors are not used.
-//   %P(: Start of colored output condition. Text in condition is printed only if 
+//   %(P: Start of colored output condition. Text in condition is printed only if 
 //        colors are used in output.
 //   %):  End of condition block
 //   %%:  Plain %

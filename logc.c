@@ -96,35 +96,6 @@ static const char *color_reset = "\033[0m";
 
 LOG(logc_internal)
 
-#define TEXT(TXT) .type = FF_TEXT, .text = (TXT), .next = &(struct format)
-#define IF(CONDITION, INVERT, LEVEL) .type = FF_IF, .condition = (CONDITION), \
-		.if_invert = (INVERT), .if_level = (LEVEL), .next = &(struct format)
-#define NXT(TYPE) .type = (TYPE), .next = &(struct format)
-static struct format def_format = (struct format){ // cppcheck-suppress "internalAstError"
-	IF(FIFC_NON_EMPTY, false, 0){
-		IF(FIFC_NON_EMPTY, false, 0){
-			NXT(FF_NAME){
-		NXT(FF_IFEND){
-		IF(FIFC_LEVEL, true, LL_DEBUG){
-			TEXT("("){
-			NXT(FF_SOURCE_FILE){
-			TEXT(":"){
-			NXT(FF_SOURCE_LINE){
-			TEXT(","){
-			NXT(FF_SOURCE_FUNC){
-			TEXT(")"){
-		NXT(FF_IFEND){
-		TEXT(": "){
-	NXT(FF_IFEND){
-	NXT(FF_MESSAGE){
-	IF(FIFC_NON_EMPTY, false, 0){
-		TEXT(": "){
-		NXT(FF_STD_ERR){
-	.type = FF_IFEND, .next = NULL
-}}}}}}}}}}}}}}}}}}}};
-#undef NXT
-#undef TEXT
-
 
 static void free_format(struct format*);
 
@@ -192,7 +163,123 @@ bool log_would_log(log_t log, enum log_level level) {
 }
 
 static struct format *parse_format(const char *format) {
-	NOT_IMPLEMENTED;
+	struct format *first = NULL;
+	struct format *f = NULL;
+	bool plain_text = false;
+	while (*format != '\0') {
+		struct format *new = malloc(sizeof *new);
+
+		if (!plain_text && *format == '%') {
+			memset(new, 0, sizeof *new);
+			switch (*++format) {
+				case 'm':
+					new->type = FF_MESSAGE;
+					break;
+				case 'n':
+					new->type = FF_NAME;
+					break;
+				case 'f':
+					new->type = FF_SOURCE_FILE;
+					break;
+				case 'i':
+					new->type = FF_SOURCE_LINE;
+					break;
+				case 'c':
+					new->type = FF_SOURCE_FUNC;
+					break;
+				case 'L':
+					new->type = FF_LEVEL;
+					break;
+				case 'l':
+					new->type = FF_LEVEL_LOWCASE;
+					break;
+				case 'e':
+					new->type = FF_STD_ERR;
+					break;
+				case '(':
+					new->type = FF_IF;
+					switch (*++format) {
+						case '_':
+							new->condition = FIFC_NON_EMPTY;
+							break;
+						case 'c':
+							new->if_invert = true;
+						case 'C':
+							new->condition = FIFC_LEVEL;
+							new->if_level = LL_CRITICAL;
+							break;
+						case 'e':
+							new->if_invert = true;
+						case 'E':
+							new->condition = FIFC_LEVEL;
+							new->if_level = LL_ERROR;
+							break;
+						case 'w':
+							new->if_invert = true;
+						case 'W':
+							new->condition = FIFC_LEVEL;
+							new->if_level = LL_WARNING;
+							break;
+						case 'n':
+							new->if_invert = true;
+						case 'N':
+							new->condition = FIFC_LEVEL;
+							new->if_level = LL_NOTICE;
+							break;
+						case 'i':
+							new->if_invert = true;
+						case 'I':
+							new->condition = FIFC_LEVEL;
+							new->if_level = LL_INFO;
+							break;
+						case 'd':
+							new->if_invert = true;
+						case 'D':
+							new->condition = FIFC_LEVEL;
+							new->if_level = LL_DEBUG;
+							break;
+						case 't':
+							new->if_invert = true;
+						case 'T':
+							new->condition = FIFC_TERMINAL;
+							break;
+						case 'p':
+							new->if_invert = true;
+						case 'P':
+							new->condition = FIFC_COLORED;
+							break;
+					}
+					break;
+				case ')':
+					new->type = FF_IFEND;
+					break;
+				case '%':
+					// This is suppose to be plain %
+					// Just restart evaluation from next character.
+					free(new);
+					plain_text = true;
+					continue;
+				default:
+					// TODO better just consider it as plain string
+					CRITICAL("Unknown %% code for '%c': %s", *format, format);
+			}
+			format++;
+		} else {
+			const char *next = strchrnul(format, '%');
+			*new = (struct format){
+				.type = FF_TEXT,
+				.text = strndup(format, next - format),
+			};
+			format = next;
+		}
+
+		if (f)
+			f->next = new;
+		else
+			first = new;
+		f = new;
+	}
+	return first;
 }
 
 static void free_format(struct format *f) {
@@ -208,8 +295,7 @@ static struct log_output *new_log_output(FILE *f, const char *format, int flags)
 	struct log_output *out = malloc(sizeof *out);
 	*out = (typeof(*out)){
 		.f = f,
-		//.format = parse_format(format),
-		.format = &def_format, // TODO for now we use default one
+		.format = parse_format(format),
 		.use_colors = (flags & LOG_F_COLORS) && !(flags & LOG_F_NO_COLORS),
 		.is_terminal = false,
 	};
@@ -222,6 +308,13 @@ static struct log_output *new_log_output(FILE *f, const char *format, int flags)
 		out->use_colors = out->is_terminal;
 
 	return out;
+}
+
+static void free_log_output(struct log_output *out) {
+	if (!out)
+		return;
+	free_format(out->format);
+	free(out);
 }
 
 void log_add_output(log_t log, FILE *file, int flags, enum log_level level, const char *format) {
@@ -265,7 +358,11 @@ void log_unchain(log_t master, log_t slave) {
 
 static struct log_output *default_stderr_output() {
 	static struct log_output *out = NULL;
-	if (out == NULL || out->f == stderr)
+	if (out && out->f != stderr) {
+		free_log_output(out);
+		out = NULL;
+	}
+	if (out == NULL)
 		out = new_log_output(stderr, LOG_FORMAT_SOURCE, 0);
 	return out;
 }
@@ -387,7 +484,7 @@ void _log(log_t log, enum log_level level,
 		FILE *f = out->f;
 		if (out->use_colors)
 			fputs(levels_info[level].color, f);
-		const struct format *format = outs[i].format ?: &def_format;
+		const struct format *format = outs[i].format;
 		do {
 			switch (format->type) {
 				case FF_TEXT:
