@@ -21,6 +21,7 @@
 #ifndef _LOGC_UTIL_H_
 #define _LOGC_UTIL_H_
 #include <logc.h>
+#include <logc_assert.h>
 
 // It is common to have prepared functions in program without functional content.
 // In C this just commonly leads to undocumented behavior but most other languages
@@ -42,9 +43,6 @@
 // easing debugging if unlikely case occurs.
 #define std_fatal(LOG, STD) do { if ((STD) == -1) critical(LOG, "Unexpected fail of '%s'", #STD); } while (0)
 
-// Logc compatible replacement for assert.h
-#define assert(LOG, COND) do { if (!(COND)) CRITICAL("Assertion '%s' failed", #COND); } while (0)
-
 #endif
 
 #ifdef DEFLOG
@@ -53,7 +51,7 @@
 
 #define NOT_IMPLEMENTED not_implemented(DEFLOG)
 #define STD_IGNORE(STD) std_ignore(DEFLOG, STD)
-#define ASSERT(COND) assert(DEFLOG, COND)
+#define STD_FATAL(STD) std_fatal(DEFLOG, STD)
 
 #endif
 #endif

@@ -8,7 +8,7 @@ liblogc_la_CFLAGS = -isystem %reldir%
 liblogc_argp_la_SOURCES = logc_argp.c
 liblogc_argp_la_CFLAGS = -isystem %reldir%
 
-include_HEADERS = logc.h logc_util.h logc_argp.h
+include_HEADERS = logc.h logc_util.h logc_assert.h logc_argp.h
 pkgconfig_DATA = logc.pc logc_argp.pc
 
 
