@@ -32,9 +32,15 @@
 // In standard C library most of the functions report error by setting errno and
 // returning value -1. It is common to ignore return codes but they sometimes can
 // help you debug program execution. It is better to wrap such function calls with
-// this macro instead of just not doing anything. Secondary it also mutest
-// compiler warning about unused return value.
+// this macro instead of just not doing anything. Secondary it also mutes compiler
+// warning about unused return value.
 #define std_ignore(LOG, STD) do { if ((STD) == -1) trace(LOG, "Ignored fail of '%s'", #STD); } while (0)
+
+// This is variant of std_ignore that instead of ignoring error terminates
+// execution. This is for same type of functions as std_ignore but for cases where
+// failure is most unlikely. Using this simplifies error handling while still
+// easing debugging if unlikely case occurs.
+#define std_fatal(LOG, STD) do { if ((STD) == -1) critical(LOG, "Unexpected fail of '%s'", #STD); } while (0)
 
 // Logc compatible replacement for assert.h
 #define assert(LOG, COND) do { if (!(COND)) CRITICAL("Assertion '%s' failed", #COND); } while (0)
