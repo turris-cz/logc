@@ -1,5 +1,6 @@
 AC_INIT([logc], [0.1.0], [cynerd@email.cz])
 AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_AUX_DIR([aux])
 
 AM_INIT_AUTOMAKE([foreign silent-rules subdir-objects -Wall -Wno-portability])
 AM_SILENT_RULES([yes])
