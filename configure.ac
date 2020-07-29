@@ -20,6 +20,7 @@ AC_ARG_ENABLE([tests], AC_HELP_STRING([--disable-tests], [Disable tests]))
 AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" != "xno"])
 AS_IF([test "x$enable_tests" != "xno"], [
   PKG_CHECK_MODULES([CHECK], [check >= 0.11])
+  AC_REQUIRE_AUX_FILE([tap-driver.sh])
 ])
 AX_VALGRIND_CHECK
 

@@ -13,6 +13,9 @@ check_PROGRAMS = %reldir%/unittests
 	$(builddir)/liblogc_argp.la \
 	$(CHECK_LIBS)
 
+
+LOG_DRIVER = env AM_TAP_AWK='$(AWK)' '$(SHELL)' '$(srcdir)/aux/tap-driver.sh'
+
 ## Valgrind
 VALGRIND_memcheck_FLAGS = \
 	--leak-check=full \

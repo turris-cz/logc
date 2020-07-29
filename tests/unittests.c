@@ -20,7 +20,10 @@
  */
 #include <check.h>
 #include <stdio.h>
-#include "logc.h"
+
+void logc_tests(Suite*);
+void logc_argp_tests(Suite*);
+
 
 int main(void) {
 	Suite *suite = suite_create("LogC");
@@ -29,6 +32,7 @@ int main(void) {
 	logc_argp_tests(suite);
 
 	SRunner *runner = srunner_create(suite);
+	srunner_set_tap(runner, "/dev/stdout");
 	srunner_set_fork_status(runner, CK_FORK); // We have to fork to catch signals
 
 	srunner_run_all(runner, CK_NORMAL);

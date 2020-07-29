@@ -19,7 +19,7 @@
  * SOFTWARE.
  */
 #define DEFLOG tlog
-#include "logc.h"
+#include <check.h>
 #include "../logc.h"
 #include "../logc_argp.h"
 
