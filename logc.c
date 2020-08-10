@@ -81,17 +81,15 @@ struct _log {
 static const  struct level_info {
 	const char *name;
 	int syslog_prio;
-	const char *color;
 } levels_info[] = {
-	[LL_CRITICAL] = { "CRITICAL", LOG_CRIT, "\033[31;1m" },
-	[LL_ERROR] = { "ERROR", LOG_ERR, "\033[31m" },
-	[LL_WARNING] = { "WARNING", LOG_WARNING, "\033[35m" },
-	[LL_NOTICE] = { "NOTICE", LOG_NOTICE, "\033[34m" },
-	[LL_INFO] = { "INFO", LOG_INFO, "\033[34m" },
-	[LL_DEBUG] = { "DEBUG", LOG_DEBUG, "\033[37;1m" },
-	[LL_TRACE] = { "TRACE", LOG_DEBUG, "\033[37m" }
+	[LL_CRITICAL] = { "CRITICAL", LOG_CRIT },
+	[LL_ERROR] = { "ERROR", LOG_ERR },
+	[LL_WARNING] = { "WARNING", LOG_WARNING },
+	[LL_NOTICE] = { "NOTICE", LOG_NOTICE },
+	[LL_INFO] = { "INFO", LOG_INFO },
+	[LL_DEBUG] = { "DEBUG", LOG_DEBUG },
+	[LL_TRACE] = { "TRACE", LOG_DEBUG }
 };
-static const char *color_reset = "\033[0m";
 
 
 LOG(logc_internal)
@@ -99,7 +97,7 @@ LOG(logc_internal)
 
 static void free_format(struct format*);
 
-inline enum log_level level_sanity(int l) {
+static inline enum log_level level_sanity(int l) {
 	return l > LL_CRITICAL ? LL_CRITICAL : l < LL_TRACE ? LL_TRACE : l;
 }
 
@@ -169,18 +167,22 @@ static struct format *parse_format(const char *format) {
 	struct format *f;
 	while (*format != '\0') {
 		struct format *new = malloc(sizeof *new);
-		if (*format == '%' && *++format != '%') {
+		bool plain_text = true;
+		if (*format == '%') {
+			format++;
 			const struct gperf_format *fg;
 			size_t len = 0;
 			do fg = gperf_format(format, ++len); while (!fg && len <= 2);
-			if (fg == NULL) { // Ignore any unknown code for future compatibility
-				free(new);
-				continue;
+			if (fg != NULL) {
+				*new = fg->f;
+				format += len;
+				plain_text = false;
 			}
-			*new = fg->f;
-			format += len;
-		} else {
-			const char *next = strchrnul(format, '%');
+			// Note: if fd == NULL then we eat up %
+		}
+		if (plain_text) {
+			// First character is not considered as if it is % it was already detected
+			const char *next = strchrnul(format + 1, '%');
 			*new = (struct format){
 				.type = FF_TEXT,
 				.text = strndup(format, next - format),
@@ -205,8 +207,8 @@ static void free_format(struct format *f) {
 	}
 }
 
-static struct log_output *new_log_output(FILE *f, const char *format, int flags) {
-	struct log_output *out = malloc(sizeof *out);
+static void new_log_output(struct log_output *out, FILE *f, const char *format, int flags) {
+	// TODO we can simplify format by removing color and terminal conditions
 	*out = (typeof(*out)){
 		.f = f,
 		.format = parse_format(format),
@@ -220,31 +222,46 @@ static struct log_output *new_log_output(FILE *f, const char *format, int flags)
 
 	if (!(flags & (LOG_F_NO_COLORS | LOG_F_COLORS)))
 		out->use_colors = out->is_terminal;
-
-	return out;
 }
 
 static void free_log_output(struct log_output *out) {
 	if (!out)
 		return;
 	free_format(out->format);
-	free(out);
 }
 
 void log_add_output(log_t log, FILE *file, int flags, enum log_level level, const char *format) {
-	NOT_IMPLEMENTED;
+	log_allocate(log);
+	// We do not expect huge amount of outputs so optimizing addition to array for
+	// speed is less beneficial over optimizing for memory (fitting exactly)
+	log->_log->outs = realloc(log->_log->outs,
+			++log->_log->outs_cnt * sizeof(struct log_output));
+	new_log_output(log->_log->outs + log->_log->outs_cnt - 1, file, format, flags);
+	// TODO level
 }
 
 bool log_rm_output(log_t log, FILE *file) {
-	NOT_IMPLEMENTED;
+	log_allocate(log);
+	for (size_t i = 0; i < log->_log->outs_cnt; i++) {
+		struct log_output *out = log->_log->outs + i;
+		if (out->f == file) {
+			free_log_output(out);
+			memmove(out, out + 1, (log->_log->outs_cnt - i) * sizeof *out);
+			log->_log->outs = realloc(log->_log->outs,
+				--log->_log->outs_cnt * sizeof(struct log_output));
+			return true;
+		}
+	}
+	return false;
 }
 
 void log_wipe_outputs(log_t log) {
 	NOT_IMPLEMENTED;
 }
 
-void log_no_output(log_t log) {
-	NOT_IMPLEMENTED;
+void log_stderr_fallback(log_t log, bool enabled) {
+	log_allocate(log);
+	log->_log->no_stderr = !enabled;
 }
 
 
@@ -280,8 +297,10 @@ static struct log_output *default_stderr_output() {
 		free_log_output(out);
 		out = NULL;
 	}
-	if (out == NULL)
-		out = new_log_output(stderr, LOG_FORMAT_SOURCE, 0);
+	if (out == NULL) {
+		out = malloc(sizeof *out);
+		new_log_output(out, stderr, LOG_FORMAT_DEFAULT, 0);
+	}
 	return out;
 }
 
@@ -289,6 +308,7 @@ static inline bool str_empty(const char *str) {
 	return !str || *str == '\0';
 }
 
+// TODO this function segfaults when there is no matching IFEND
 static const struct format *if_seek_forward(const struct format *format,
 		enum log_level set_level, bool is_term, bool colors,
 		bool no_log_name, bool no_msg, bool no_err) {
@@ -299,7 +319,7 @@ static const struct format *if_seek_forward(const struct format *format,
 			not_empty_check = false;
 			break;
 		case FIFC_LEVEL:
-			skip = set_level >= format->if_level;
+			skip = set_level < format->if_level;
 			break;
 		case FIFC_TERMINAL:
 			skip = !is_term;
@@ -309,11 +329,11 @@ static const struct format *if_seek_forward(const struct format *format,
 	}
 
 	if (not_empty_check) {
-		if (skip != format->if_invert)
+		if (skip == format->if_invert)
 			return format;
 
 		size_t depth = 0;
-		while (true) {
+		while (format) {
 			switch (format->type) {
 				case FF_IF:
 					depth++;
@@ -327,10 +347,11 @@ static const struct format *if_seek_forward(const struct format *format,
 			}
 			format = format->next;
 		};
+		return NULL;
 	}
 
 	size_t depth = 1;
-	for (const struct format *f = format->next; ; f = f->next) {
+	for (const struct format *f = format->next; f; f = f->next) {
 		bool empty = true;
 		switch (f->type) {
 			case FF_TEXT:
@@ -400,8 +421,6 @@ void _log(log_t log, enum log_level level,
 	for (size_t i = 0; i < cnt; i++) {
 		struct log_output *out = outs + i;
 		FILE *f = out->f;
-		if (out->use_colors)
-			fputs(levels_info[level].color, f);
 		const struct format *format = outs[i].format;
 		do {
 			switch (format->type) {
@@ -412,7 +431,8 @@ void _log(log_t log, enum log_level level,
 					fputs(msg, f);
 					break;
 				case FF_NAME:
-					fputs(log->name, f);
+					if (log->name)
+						fputs(log->name, f);
 					break;
 				case FF_SOURCE_FILE:
 					fputs(file, f);
@@ -447,8 +467,6 @@ void _log(log_t log, enum log_level level,
 			}
 			format = format->next;
 		} while (format);
-		if (out->use_colors)
-			fputs(color_reset, f);
 		fputc('\n', f);
 	}
 

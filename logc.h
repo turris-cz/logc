@@ -63,10 +63,15 @@ void log_quiet(log_t) __attribute__((nonnull));
 // Returns true if message would be outputed and false if not.
 bool log_would_log(log_t, enum log_level);
 
+//// Terminal color format definition ////////////////////////////////////////////
+#define LOG_FORMAT_COLOR "%(P%(C\033[31;1m%)%(c%(E\033[31m%)%)%(e%(W\033[35m%)%)%(w%(I\033[34m%)%)%(i%(D\033[37;1m%)%)%(d\033[37m%)%)"
+#define LOG_FORMAT_COLOR_CLEAR "%(P\033[0m%)"
+
 //// Some standard output formats ////////////////////////////////////////////////
 #define LOG_FORMAT_PLAIN "%(_%n: %)%m%(: %e%)"
-#define LOG_FORMAT_SOURCE "%(_%(_%n%)%(d(%f:%i,%c)%): %)%m%(_: %e%)"
-#define LOG_FORMAT_FULL "%L:%(_%n%)(%f:%i,%c): %m%(_: %e%)"
+#define LOG_FORMAT_DEFAULT (LOG_FORMAT_COLOR "%(_%(p%L:%)%(_%n%(D:%)%)%(d(%f:%i,%c):%) %)%m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
+#define LOG_FORMAT_SOURCE (LOG_FORMAT_COLOR "%(p%L:%)%n(%f:%i,%c): %m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
+#define LOG_FORMAT_FULL (LOG_FORMAT_COLOR "%L:%n(%f:%i,%c): %m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
 
 //// Output to FILE //////////////////////////////////////////////////////////////
 // Output no colors even when output is detected as capable terminal
@@ -125,8 +130,9 @@ bool log_rm_output(log_t, FILE*) __attribute__((nonnull));
 // Remove all outputs from log (fallback to stderr)
 void log_wipe_outputs(log_t) __attribute__((nonnull));
 
-// Disable fallback output to stderr (effectively not outputting at all)
-void log_no_output(log_t) __attribute__((nonnull));
+// Set if stderr fallback output should be used or not. In default it is enabled.
+// Fallback is used if no other output is configured.
+void log_stderr_fallback(log_t, bool enabled) __attribute__((nonnull));
 
 //// Output to Syslog ////////////////////////////////////////////////////////////
 // Set if logs should be send to syslog
