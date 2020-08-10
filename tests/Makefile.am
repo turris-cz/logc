@@ -14,7 +14,9 @@ check_PROGRAMS = %reldir%/unittests
 	$(CHECK_LIBS)
 
 
-LOG_DRIVER = env AM_TAP_AWK='$(AWK)' '$(SHELL)' '$(srcdir)/aux/tap-driver.sh'
+LOG_DRIVER = \
+	env AM_TAP_AWK='$(AWK)' TEST_OUTPUT_TAP=y \
+	'$(SHELL)' '$(srcdir)/aux/tap-driver.sh'
 
 ## Valgrind
 VALGRIND_memcheck_FLAGS = \

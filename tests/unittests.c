@@ -19,6 +19,7 @@
  * SOFTWARE.
  */
 #include <check.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 void logc_tests(Suite*);
@@ -32,7 +33,9 @@ int main(void) {
 	logc_argp_tests(suite);
 
 	SRunner *runner = srunner_create(suite);
-	srunner_set_tap(runner, "/dev/stdout");
+	char *test_output_tap = getenv("TEST_OUTPUT_TAP");
+	if (test_output_tap && !strcmp(test_output_tap, "y"))
+		srunner_set_tap(runner, "/dev/stdout");
 	srunner_set_fork_status(runner, CK_FORK); // We have to fork to catch signals
 
 	srunner_run_all(runner, CK_NORMAL);
