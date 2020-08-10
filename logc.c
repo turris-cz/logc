@@ -126,10 +126,15 @@ static void log_allocate(log_t log) {
 	};
 }
 
+static void free_log_output(struct log_output *out);
+
 void log_free(log_t log) {
 	if (!log->_log)
 		return;
-	// TODO
+	for (size_t i = 0; i < log->_log->outs_cnt; i++)
+		free_log_output(log->_log->outs + i);
+	if (log->_log->outs)
+		free(log->_log->outs);
 	free(log->_log);
 	log->_log = NULL;
 }
@@ -388,6 +393,7 @@ static const struct format *if_seek_forward(const struct format *format,
 		if (!empty)
 			return format;
 	}
+	return NULL;
 }
 
 void _log(log_t log, enum log_level level,
