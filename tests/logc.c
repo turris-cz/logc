@@ -217,6 +217,7 @@ struct custom_output_tests {
 	{"%(dtext%)", ""},
 	{"%(Dtext%)", "text"},
 	{"%(c%(e%(wtext%)%)%)", "text"},
+	{"%(c%(e%(wtext", "text"}, // Verify that unterminated ifs are not an issue
 	// Note: Output is to memstream not to terminal
 	{"%(ttext%)", "text"},
 	{"%(Ttext%)", ""},

@@ -68,7 +68,7 @@ bool log_would_log(log_t, enum log_level);
 #define LOG_FORMAT_COLOR_CLEAR "%(P\033[0m%)"
 
 //// Some standard output formats ////////////////////////////////////////////////
-#define LOG_FORMAT_PLAIN "%(_%n: %)%m%(: %e%)"
+#define LOG_FORMAT_PLAIN "%(_%n: %)%m%(_: %e%)"
 #define LOG_FORMAT_DEFAULT (LOG_FORMAT_COLOR "%(_%(p%L:%)%(_%n%(D:%)%)%(d(%f:%i,%c):%) %)%m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
 #define LOG_FORMAT_SOURCE (LOG_FORMAT_COLOR "%(p%L:%)%n(%f:%i,%c): %m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
 #define LOG_FORMAT_FULL (LOG_FORMAT_COLOR "%L:%n(%f:%i,%c): %m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)

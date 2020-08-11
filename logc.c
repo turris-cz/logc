@@ -313,7 +313,6 @@ static inline bool str_empty(const char *str) {
 	return !str || *str == '\0';
 }
 
-// TODO this function segfaults when there is no matching IFEND
 static const struct format *if_seek_forward(const struct format *format,
 		enum log_level set_level, bool is_term, bool colors,
 		bool no_log_name, bool no_msg, bool no_err) {
