@@ -287,6 +287,13 @@ void log_stderr_fallback(log_t log, bool enabled) {
 	log->_log->no_stderr = !enabled;
 }
 
+void log_flush(log_t log) {
+	if (log->_log)
+		for (size_t i = 0; i < log->_log->outs_cnt; i++)
+			fflush(log->_log->outs[i].f);
+	fflush(stderr); // alway flush stderr to cover cases when outs were just added
+};
+
 
 void log_syslog_enable(log_t log) {
 	NOT_IMPLEMENTED;
