@@ -119,6 +119,8 @@ bool log_would_log(log_t, enum log_level);
 //        colors are used in output.
 //   %):  End of condition block
 //   %%:  Plain %
+//  Single FILE can be added only once. If same FILE object is provided multiple
+//  times then it replaces original.
 void log_add_output(log_t, FILE*, int flags, enum log_level, const char *format)
 	__attribute__((nonnull));
 

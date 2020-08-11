@@ -284,6 +284,83 @@ START_TEST(check_custom_outputs_flags) {
 }
 END_TEST
 
+START_TEST(check_custom_output_remove) {
+	log_set_level(tlog, LL_INFO);
+
+	char *buf;
+	size_t bufsiz;
+	FILE *f = open_memstream(&buf, &bufsiz);
+
+	log_add_output(tlog, f, LOG_F_AUTOCLOSE, LL_INFO, LOG_FORMAT_PLAIN);
+	INFO("output");
+	ck_assert(log_rm_output(tlog, f));
+	// No need to flush here as f is closed on log_rm_output and so flushed
+	ck_assert_str_eq(buf, "tlog: output\n");
+	free(buf);
+
+	// Test default output as well to verify that we stopped using custom one
+	INFO("stderr");
+	fflush(stderr);
+	ck_assert_str_eq(stderr_data, "INFO:tlog: stderr\n");
+
+	ck_assert_int_eq(errno, 0);
+}
+END_TEST
+
+START_TEST(check_custom_output_twice) {
+	log_set_level(tlog, LL_INFO);
+
+	char *buf;
+	size_t bufsiz;
+	FILE *f = open_memstream(&buf, &bufsiz);
+
+	log_add_output(tlog, f, 0, LL_INFO, LOG_FORMAT_PLAIN);
+	INFO("plain");
+	fflush(f);
+	ck_assert_str_eq(buf, "tlog: plain\n");
+
+	log_add_output(tlog, f, 0, LL_INFO, LOG_FORMAT_DEFAULT);
+	INFO("default");
+	fflush(f);
+	ck_assert_str_eq(buf, "tlog: plain\nINFO:tlog: default\n");
+
+	fclose(f);
+	free(buf);
+
+	ck_assert_int_eq(errno, 0);
+}
+END_TEST
+
+START_TEST(check_custom_output_wipe) {
+	log_set_level(tlog, LL_INFO);
+
+	char *buf1, *buf2;
+	size_t bufsiz1, bufsiz2;
+	FILE *f1 = open_memstream(&buf1, &bufsiz1);
+	FILE *f2 = open_memstream(&buf2, &bufsiz2);
+
+	log_add_output(tlog, f1, LOG_F_AUTOCLOSE, LL_INFO, LOG_FORMAT_PLAIN);
+	log_add_output(tlog, f2, LOG_F_AUTOCLOSE, LL_INFO, LOG_FORMAT_PLAIN);
+
+	INFO("Message");
+
+	log_wipe_outputs(tlog);
+	fflush(stderr);
+
+	ck_assert_str_eq(buf1, "tlog: Message\n");
+	ck_assert_str_eq(buf2, "tlog: Message\n");
+	ck_assert_int_eq(stderr_len, 0);
+	free(buf1);
+	free(buf2);
+
+	INFO("Message");
+	fflush(stderr);
+	ck_assert_str_eq(stderr_data, "INFO:tlog: Message\n");
+
+	ck_assert_int_eq(errno, 0);
+}
+END_TEST
+
 
 void logc_tests(Suite *suite) {
 	TCase *def_output = tcase_create("default output");
@@ -309,5 +386,8 @@ void logc_tests(Suite *suite) {
 			sizeof(custom_output_tests) / sizeof(struct custom_output_tests));
 	tcase_add_loop_test(custom_output, check_custom_outputs_flags, 0,
 			sizeof(custom_output_flag_tests) / sizeof(struct custom_output_flag_tests));
+	tcase_add_test(custom_output, check_custom_output_remove);
+	tcase_add_test(custom_output, check_custom_output_twice);
+	tcase_add_test(custom_output, check_custom_output_wipe);
 	suite_add_tcase(suite, custom_output);
 }

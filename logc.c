@@ -238,11 +238,21 @@ static void free_log_output(struct log_output *out, bool close_f) {
 
 void log_add_output(log_t log, FILE *file, int flags, enum log_level level, const char *format) {
 	log_allocate(log);
+	size_t index = log->_log->outs_cnt;
+	for (size_t i = 0; i < log->_log->outs_cnt; i++) // Locate if already present
+		if (file == log->_log->outs[i].f) {
+			free_log_output(log->_log->outs + i, false);
+			index = i;
+			break;
+		}
+
 	// We do not expect huge amount of outputs so optimizing addition to array for
 	// speed is less beneficial over optimizing for memory (fitting exactly)
-	log->_log->outs = realloc(log->_log->outs,
-			++log->_log->outs_cnt * sizeof(struct log_output));
-	new_log_output(log->_log->outs + log->_log->outs_cnt - 1, file, format, flags);
+	if (index == log->_log->outs_cnt)
+		log->_log->outs = realloc(log->_log->outs,
+				++log->_log->outs_cnt * sizeof(struct log_output));
+
+	new_log_output(log->_log->outs + index, file, format, flags);
 	// TODO level
 }
 
@@ -252,9 +262,10 @@ bool log_rm_output(log_t log, FILE *file) {
 		struct log_output *out = log->_log->outs + i;
 		if (out->f == file) {
 			free_log_output(out, true);
+			log->_log->outs_cnt--;
 			memmove(out, out + 1, (log->_log->outs_cnt - i) * sizeof *out);
 			log->_log->outs = realloc(log->_log->outs,
-				--log->_log->outs_cnt * sizeof(struct log_output));
+				log->_log->outs_cnt * sizeof *out);
 			return true;
 		}
 	}
