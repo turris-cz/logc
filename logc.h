@@ -79,7 +79,7 @@ bool log_would_log(log_t, enum log_level);
 // Output colors even if output is not detected as capable terminal
 // (LOG_F_NO_COLORS has precedence over CELOG_F_COLORS if both are specified)
 #define LOG_F_COLORS (1 << 2)
-// Automatically close passed FILE when celog_free is called
+// Automatically close passed FILE when log_rm_output is called
 #define LOG_F_AUTOCLOSE (1 << 4)
 
 // Add output stream to log with specified output format.

@@ -69,6 +69,7 @@ struct log_output {
 	struct format *format;
 	bool use_colors;
 	bool is_terminal;
+	bool autoclose;
 };
 
 struct _log {
@@ -126,15 +127,12 @@ static void log_allocate(log_t log) {
 	};
 }
 
-static void free_log_output(struct log_output *out);
+static void free_log_output(struct log_output *out, bool close_f);
 
 void log_free(log_t log) {
 	if (!log->_log)
 		return;
-	for (size_t i = 0; i < log->_log->outs_cnt; i++)
-		free_log_output(log->_log->outs + i);
-	if (log->_log->outs)
-		free(log->_log->outs);
+	log_wipe_outputs(log);
 	free(log->_log);
 	log->_log = NULL;
 }
@@ -219,6 +217,7 @@ static void new_log_output(struct log_output *out, FILE *f, const char *format, 
 		.format = parse_format(format),
 		.use_colors = (flags & LOG_F_COLORS) && !(flags & LOG_F_NO_COLORS),
 		.is_terminal = false,
+		.autoclose = flags & LOG_F_AUTOCLOSE,
 	};
 
 	int fd = fileno(f); errno = 0;
@@ -229,9 +228,11 @@ static void new_log_output(struct log_output *out, FILE *f, const char *format, 
 		out->use_colors = out->is_terminal;
 }
 
-static void free_log_output(struct log_output *out) {
+static void free_log_output(struct log_output *out, bool close_f) {
 	if (!out)
 		return;
+	if (close && out->autoclose)
+		fclose(out->f);
 	free_format(out->format);
 }
 
@@ -250,7 +251,7 @@ bool log_rm_output(log_t log, FILE *file) {
 	for (size_t i = 0; i < log->_log->outs_cnt; i++) {
 		struct log_output *out = log->_log->outs + i;
 		if (out->f == file) {
-			free_log_output(out);
+			free_log_output(out, true);
 			memmove(out, out + 1, (log->_log->outs_cnt - i) * sizeof *out);
 			log->_log->outs = realloc(log->_log->outs,
 				--log->_log->outs_cnt * sizeof(struct log_output));
@@ -261,7 +262,13 @@ bool log_rm_output(log_t log, FILE *file) {
 }
 
 void log_wipe_outputs(log_t log) {
-	NOT_IMPLEMENTED;
+	if (!log->_log)
+		return;
+	for (size_t i = 0; i < log->_log->outs_cnt; i++)
+		free_log_output(log->_log->outs + i, true);
+	free(log->_log->outs);
+	log->_log->outs_cnt = 0;
+	log->_log->outs = NULL;
 }
 
 void log_stderr_fallback(log_t log, bool enabled) {
@@ -299,7 +306,7 @@ void log_unchain(log_t master, log_t slave) {
 static struct log_output *default_stderr_output() {
 	static struct log_output *out = NULL;
 	if (out && out->f != stderr) {
-		free_log_output(out);
+		free_log_output(out, false);
 		out = NULL;
 	}
 	if (out == NULL) {
