@@ -221,7 +221,7 @@ static void new_log_output(struct log_output *out, FILE *f, const char *format, 
 		.is_terminal = false,
 	};
 
-	int fd = fileno(f);
+	int fd = fileno(f); errno = 0;
 	if (fd != -1)
 		out->is_terminal = isatty(fd);
 

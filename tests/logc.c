@@ -30,6 +30,7 @@ size_t stderr_len;
 log_t tlog;
 
 static void setup_capture() {
+	errno = 0; // Set to 0 to reset any previous possible error
 	orig_stderr = stderr;
 	stderr = open_memstream(&stderr_data, &stderr_len);
 }
@@ -46,7 +47,6 @@ static void setup_tlog() {
 	*tlog = (struct log) {
 		.name = "tlog"
 	};
-	errno = 0;
 }
 
 static void teardown_tlog() {
@@ -61,6 +61,8 @@ START_TEST(simple_warning) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "WARNING:tlog: This is warning!\n");
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -85,6 +87,8 @@ START_TEST(check_default_level) {
 		free(expected);
 	} else
 		ck_assert_str_eq(stderr_data, "");
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -100,6 +104,8 @@ START_TEST(check_all_levels) {
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -109,6 +115,8 @@ START_TEST(app_log) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "ERROR: This is error!\n");
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -123,6 +131,8 @@ START_TEST(standard_error) {
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -137,6 +147,8 @@ START_TEST(call_verbose) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "DEBUG:tlog: This is debug!\n");
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -151,6 +163,8 @@ START_TEST(call_quiet) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "ERROR:tlog: This is error!\n");
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -160,6 +174,8 @@ START_TEST(disabled_def_output) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "");
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -168,6 +184,8 @@ START_TEST(check_would_log) {
 
 	for (enum log_level level = LL_TRACE; level < LL_CRITICAL; level++)
 		ck_assert(log_would_log(tlog, level) == (level >= _i));
+
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -219,7 +237,6 @@ START_TEST(check_custom_outputs) {
 	FILE *f = open_memstream(&buf, &bufsiz);
 	log_add_output(tlog, f, 0, LL_INFO, custom_output_tests[_i].format);
 
-	errno = 0;
 	_log(tlog, LL_INFO, "tests/logc.c", 42, "function_name", "Message");
 
 	fclose(f);
@@ -254,7 +271,6 @@ START_TEST(check_custom_outputs_flags) {
 	FILE *f = open_memstream(&buf, &bufsiz);
 	log_add_output(tlog, f, custom_output_flag_tests[_i].flags, LL_INFO, custom_output_flag_tests[_i].format);
 
-	errno = 0;
 	INFO("Message");
 
 	fclose(f);
@@ -263,6 +279,7 @@ START_TEST(check_custom_outputs_flags) {
 	free(buf);
 
 	ck_assert_int_eq(stderr_len, 0); // No output to stderr
+	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
