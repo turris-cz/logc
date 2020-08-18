@@ -179,9 +179,9 @@ void _log(log_t, enum log_level,
 #endif
 
 
+#ifdef DEFLOG
 #ifndef _LOGC_H_DEFLOG
 #define _LOGC_H_DEFLOG
-#ifdef DEFLOG
 
 #define CRITICAL(...) critical(DEFLOG, __VA_ARGS__)
 #define ERROR(...) error(DEFLOG, __VA_ARGS__)
