@@ -69,15 +69,26 @@ bool log_would_log(log_t, enum log_level);
 bool log_use_origin(log_t) __attribute__((nonnull));
 void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 
-//// Terminal color format definition ////////////////////////////////////////////
-#define LOG_FORMAT_COLOR "%(P%(C\033[31;1m%)%(c%(E\033[31m%)%)%(e%(W\033[35m%)%)%(w%(I\033[34m%)%)%(i%(D\033[37;1m%)%)%(d\033[37m%)%)"
-#define LOG_FORMAT_COLOR_CLEAR "%(P\033[0m%)"
+//// Standard format pieces free to reuse ////////////////////////////////////////
+// Color based on level of message. Conditioned to be used only when colors should
+// be used. This is intended to distinguish different message levels by colors.
+// TRACE and DEBUG levels have light gray color
+// INFO level is has plain white color (no coloring)
+// NOTICE level has bright white color
+// WARNING level has bright yellow color
+// ERROR level has bright red color
+// CRITICAL level has red color
+#define LOG_FP_COLOR "%(P%(C\033[31m%)%(c%(E\033[31;1m%)%)%(e%(W\033[33;1m%)%)%(w%(N\033[37;1m%)%)%(i\033[37m%)%)"
+#define LOG_FP_COLOR_CLEAR "%(P\033[0m%)"
+
+// This standard prefix format for origin of message. It provides name of log and
+// origin of message in code (if of course that is enabled and provided).
+#define LOG_FP_ORIGIN "%(_%n%(_(%f:%i,%c)%):%)"
 
 //// Some standard output formats ////////////////////////////////////////////////
 #define LOG_FORMAT_PLAIN "%(_%n: %)%m%(_: %e%)"
-#define LOG_FORMAT_DEFAULT (LOG_FORMAT_COLOR "%(_%(p%L:%)%(_%n%(D:%)%)%(d(%f:%i,%c):%) %)%m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
-#define LOG_FORMAT_SOURCE (LOG_FORMAT_COLOR "%(p%L:%)%n(%f:%i,%c): %m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
-#define LOG_FORMAT_FULL (LOG_FORMAT_COLOR "%L:%n(%f:%i,%c): %m%(_: %e%)" LOG_FORMAT_COLOR_CLEAR)
+#define LOG_FORMAT_DEFAULT (LOG_FP_COLOR "%(_%(p%L:%)" LOG_FP_ORIGIN " %)%m%(_: %e%)" LOG_FP_COLOR_CLEAR)
+#define LOG_FORMAT_FULL (LOG_FP_COLOR "%L:" LOG_FP_ORIGIN " %m%(_: %e%)" LOG_FP_COLOR_CLEAR)
 
 //// Output to FILE //////////////////////////////////////////////////////////////
 // Output no colors even when output is detected as capable terminal
@@ -103,18 +114,18 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 //   %(_:  Start of not-empty condition. Following text till the end of condition
 //        is printed only if at least one field in it is not empty. It ignores
 //        any constant text and conditions are not considered as field.
-//   %(c: Start of less than critical level condition.
-//   %(C: Start of critical level condition.
-//   %(e: Start of less than error level condition.
-//   %(E: Start of error or higher level condition.
-//   %(w: Start of less than warning level condition.
-//   %(W: Start of warning or higher level condition.
-//   %(n: Start of less than notice level condition.
-//   %(N: Start of notice or higher level condition.
-//   %(i: Start of less than info level condition.
-//   %(I: Start of info or higher level confition.
-//   %(d: Start of less than debug level condition.
-//   %(D: Start of debug or higher level condition.
+//   %(c: Start of less than critical level of message condition.
+//   %(C: Start of critical level of message condition.
+//   %(e: Start of less than error level of message condition.
+//   %(E: Start of error or higher level of message condition.
+//   %(w: Start of less than warning level of message condition.
+//   %(W: Start of warning or higher level of message condition.
+//   %(n: Start of less than notice level of message condition.
+//   %(N: Start of notice or higher level of message condition.
+//   %(i: Start of less than info level of message condition.
+//   %(I: Start of info or higher level of message confition.
+//   %(d: Start of less than debug level of message condition.
+//   %(D: Start of debug or higher level of message condition.
 //   %(t: Start of not terminal output condition. Text in condition is printed
 //         only if output is not to terminal.
 //   %(T: Start of terminal output condition. Text in condition is printed only if

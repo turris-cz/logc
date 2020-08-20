@@ -5,6 +5,7 @@ check_PROGRAMS = %reldir%/unittests
 %canon_reldir%_unittests_SOURCES = \
 	%reldir%/unittests.c \
 	%reldir%/logc.c \
+	%reldir%/logc_formats.c \
 	%reldir%/logc_argp.c
 %canon_reldir%_unittests_CFLAGS = \
 	$(CHECK_FLAGS)

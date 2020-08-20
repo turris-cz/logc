@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 void logc_tests(Suite*);
+void logc_formats_tests(Suite*);
 void logc_argp_tests(Suite*);
 
 
@@ -30,6 +31,7 @@ int main(void) {
 	Suite *suite = suite_create("LogC");
 
 	logc_tests(suite);
+	logc_formats_tests(suite);
 	logc_argp_tests(suite);
 
 	SRunner *runner = srunner_create(suite);

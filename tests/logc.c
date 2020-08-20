@@ -24,10 +24,10 @@
 #include <signal.h>
 #include <errno.h>
 
-FILE *orig_stderr;
-char *stderr_data;
-size_t stderr_len;
-log_t tlog;
+static FILE *orig_stderr;
+static char *stderr_data;
+static size_t stderr_len;
+static log_t tlog;
 
 static void setup_capture() {
 	errno = 0; // Set to 0 to reset any previous possible error
@@ -94,13 +94,11 @@ END_TEST
 
 START_TEST(check_all_levels) {
 	log_set_level(tlog, LL_TRACE);
-	const int line = __LINE__ + 1;
 	log(tlog, _i, "This is message!");
 
 	fflush(stderr);
 	char *expected;
-	int len = asprintf(&expected, "%s:tlog(%s:%d,%s): This is message!\n",
-			level_name[_i], __FILE__, line, __func__);
+	int len = asprintf(&expected, "%s:tlog: This is message!\n", level_name[_i]);
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
@@ -231,12 +229,12 @@ struct custom_output_tests {
 };
 
 START_TEST(check_custom_outputs) {
-	log_set_level(tlog, LL_INFO);
+	log_set_level(tlog, LL_TRACE);
 
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
-	log_add_output(tlog, f, 0, LL_INFO, custom_output_tests[_i].format);
+	log_add_output(tlog, f, 0, LL_TRACE, custom_output_tests[_i].format);
 
 	_log(tlog, LL_INFO, "tests/logc.c", 42, "function_name", "Message");
 
