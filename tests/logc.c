@@ -177,6 +177,25 @@ START_TEST(disabled_def_output) {
 }
 END_TEST
 
+START_TEST(message_origin) {
+	ck_assert(!log_use_origin(tlog));
+	log_set_use_origin(tlog, true);
+	ck_assert(log_use_origin(tlog));
+
+	const int line = __LINE__ + 1;
+	NOTICE("foo");
+
+	fflush(stderr);
+	char *expected;
+	int len = asprintf(&expected, "NOTICE:tlog(%s:%d,%s): foo\n", __FILE__, line, __func__);
+	ck_assert_str_eq(stderr_data, expected);
+	ck_assert_int_eq(stderr_len, len);
+	free(expected);
+
+	ck_assert_int_eq(errno, 0);
+}
+END_TEST
+
 START_TEST(check_would_log) {
 	log_set_level(tlog, _i);
 
@@ -371,6 +390,7 @@ void logc_tests(Suite *suite) {
 	tcase_add_test(def_output, call_verbose);
 	tcase_add_test(def_output, call_quiet);
 	tcase_add_loop_test(def_output, disabled_def_output, LL_TRACE, LL_CRITICAL);
+	tcase_add_test(def_output, message_origin);
 	suite_add_tcase(suite, def_output);
 
 	TCase *would_log = tcase_create("would log check");
