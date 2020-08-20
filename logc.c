@@ -77,6 +77,7 @@ struct _log {
 	struct log_output *outs;
 	size_t outs_cnt;
 	bool no_stderr;
+	bool use_origin;
 };
 
 static const  struct level_info {
@@ -161,6 +162,15 @@ bool log_would_log(log_t log, enum log_level level) {
 	level = level_sanity(level);
 	enum log_level set_level = log->_log ? log->_log->level : log_level_from_env();
 	return level >= set_level;
+}
+
+bool log_use_origin(log_t log) {
+	return log->_log && log->_log->use_origin;
+}
+
+void log_set_use_origin(log_t log, bool use) {
+	log_allocate(log);
+	log->_log->use_origin = use;
 }
 
 #include "format.gperf.c"
@@ -339,7 +349,7 @@ static inline bool str_empty(const char *str) {
 }
 
 static const struct format *if_seek_forward(const struct format *format,
-		enum log_level set_level, bool is_term, bool colors,
+		enum log_level level, bool is_term, bool colors, bool use_origin,
 		bool no_log_name, bool no_msg, bool no_err) {
 	bool not_empty_check = true;
 	bool skip = false;
@@ -348,7 +358,7 @@ static const struct format *if_seek_forward(const struct format *format,
 			not_empty_check = false;
 			break;
 		case FIFC_LEVEL:
-			skip = set_level < format->if_level;
+			skip = level < format->if_level;
 			break;
 		case FIFC_TERMINAL:
 			skip = !is_term;
@@ -395,6 +405,8 @@ static const struct format *if_seek_forward(const struct format *format,
 			case FF_SOURCE_FILE:
 			case FF_SOURCE_LINE:
 			case FF_SOURCE_FUNC:
+				empty = !use_origin;
+				break;
 			case FF_LEVEL:
 			case FF_LEVEL_LOWCASE:
 				empty = false; // We always have these
@@ -404,7 +416,7 @@ static const struct format *if_seek_forward(const struct format *format,
 				break;
 			case FF_IF:
 				// Use recurse to skip to FF_IFEND if condition is satisfied
-				f = if_seek_forward(f, set_level, is_term, colors, no_log_name, no_msg, no_err);
+				f = if_seek_forward(f, level, is_term, colors, use_origin, no_log_name, no_msg, no_err);
 				if (f->type == FF_IF)
 					depth++;
 				break;
@@ -447,6 +459,7 @@ void _log(log_t log, enum log_level level,
 		} else if (log->_log->no_stderr)
 			cnt = 0;
 	}
+	bool use_origin = log->_log && log->_log->use_origin;
 
 	for (size_t i = 0; i < cnt; i++) {
 		struct log_output *out = outs + i;
@@ -465,13 +478,16 @@ void _log(log_t log, enum log_level level,
 						fputs(log->name, f);
 					break;
 				case FF_SOURCE_FILE:
-					fputs(file, f);
+					if (use_origin)
+						fputs(file, f);
 					break;
 				case FF_SOURCE_LINE:
-					fprintf(f, "%zu", line);
+					if (use_origin)
+						fprintf(f, "%zu", line);
 					break;
 				case FF_SOURCE_FUNC:
-					fputs(func, f);
+					if (use_origin)
+						fputs(func, f);
 					break;
 				case FF_LEVEL:
 					fputs(levels_info[level].name, f);
@@ -487,8 +503,8 @@ void _log(log_t log, enum log_level level,
 						fputs(strerror(stderrno), f);
 					break;
 				case FF_IF:
-					format = if_seek_forward(format, set_level, out->is_terminal,
-							out->use_colors, str_empty(log->name),
+					format = if_seek_forward(format, level, out->is_terminal,
+							out->use_colors, use_origin, str_empty(log->name),
 							msg_size == 0, stderrno == 0);
 					break;
 				case FF_IFEND:

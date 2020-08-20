@@ -63,6 +63,12 @@ void log_quiet(log_t) __attribute__((nonnull));
 // Returns true if message would be outputed and false if not.
 bool log_would_log(log_t, enum log_level);
 
+//// Additional options //////////////////////////////////////////////////////////
+// Setting to specify that origin of log should be used. That includes name of
+// source file, source line and name of function. In default origin is not used.
+bool log_use_origin(log_t) __attribute__((nonnull));
+void log_set_use_origin(log_t, bool) __attribute__((nonnull));
+
 //// Terminal color format definition ////////////////////////////////////////////
 #define LOG_FORMAT_COLOR "%(P%(C\033[31;1m%)%(c%(E\033[31m%)%)%(e%(W\033[35m%)%)%(w%(I\033[34m%)%)%(i%(D\033[37;1m%)%)%(d\033[37m%)%)"
 #define LOG_FORMAT_COLOR_CLEAR "%(P\033[0m%)"
