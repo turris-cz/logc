@@ -36,8 +36,11 @@ int main(void) {
 
 	SRunner *runner = srunner_create(suite);
 	char *test_output_tap = getenv("TEST_OUTPUT_TAP");
-	if (test_output_tap && !strcmp(test_output_tap, "y"))
-		srunner_set_tap(runner, "/dev/stdout");
+	if (test_output_tap && *test_output_tap != '\0')
+		srunner_set_tap(runner, test_output_tap);
+	char *test_output_xml = getenv("TEST_OUTPUT_XML");
+	if (test_output_xml && *test_output_xml != '\0')
+		srunner_set_xml(runner, test_output_xml);
 	srunner_set_fork_status(runner, CK_FORK); // We have to fork to catch signals
 
 	srunner_run_all(runner, CK_NORMAL);

@@ -7,12 +7,19 @@
 *.pc
 .libs
 *.gperf.c
+logc-*.tar.gz
+logc-*.zip
 
 # Test outputs
 tests/unittests
 test-suite*.log
 tests/*.log
 tests/*.trs
+
+# Coverage output
+*.gcno
+*-coverage
+*-coverage.info
 
 ## Autotools
 /m4

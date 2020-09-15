@@ -1,0 +1,84 @@
+image: registry.labs.nic.cz/turris/logc
+
+stages:
+  - build
+  - test
+  - coverage
+  - release
+
+## Build stage ###################################################################
+build:
+  stage: build
+  script:
+    - ./bootstrap
+    - ./configure --disable-tests --disable-valgrind --disable-linters
+    - make
+  artifacts:
+    when: on_failure
+    expire_in: 1 week
+    paths:
+    - config.log
+
+dist:
+  stage: build
+  script:
+    - ./bootstrap
+    - ./configure
+    - make dist
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - logc-*.tar.gz
+      - logc-*.zip
+
+## Test stage ####################################################################
+.test:
+  stage: test
+  needs: [build]
+  before_script:
+      - ./bootstrap
+      - ./configure
+
+.test-check:
+  extends: .test
+  artifacts:
+    when: on_failure
+    expire_in: 1 week
+    paths:
+    - 'test-suite*.log'
+    - 'tests/*/*.log'
+    - 'tests/*/*.trs'
+
+check:
+  extends: .test-check
+  script:
+    - make check
+
+valgrind:
+  extends: .test-check
+  script:
+    - make check-valgrind
+
+lint:
+  allow_failure: true
+  extends: .test
+  script:
+    - make lint
+
+## Code Coverage stage ###########################################################
+coverage:
+  stage: coverage
+  needs: [check]
+  script:
+    - ./bootstrap
+    - ./configure --enable-code-coverage
+    - make check-code-coverage V=1
+  coverage: '/lines\.\.\.\.\.\.: (\d+.\d+%)/'
+  artifacts:
+    expire_in: 1 month
+    expose_as: 'Code Coverage'
+    paths:
+    - 'logc-0.1.0-coverage/'
+
+## Release creation ##############################################################
+# TODO

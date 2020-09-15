@@ -16,7 +16,7 @@ check_PROGRAMS = %reldir%/unittests
 
 
 LOG_DRIVER = \
-	env AM_TAP_AWK='$(AWK)' TEST_OUTPUT_TAP=y \
+	env AM_TAP_AWK='$(AWK)' TEST_OUTPUT_TAP="/dev/stdout" \
 	'$(SHELL)' '$(srcdir)/aux/tap-driver.sh'
 
 ## Valgrind
@@ -37,6 +37,9 @@ endef
 $(foreach tool,$(valgrind_tools),$(eval $(call check_valgrind_rule,$(tool))))
 
 ## Coverage
+CODE_COVERAGE_LCOV_OPTIONS := --no-external
+CODE_COVERAGE_GENHTML_OPTIONS := --prefix $(dir $(abs_top_builddir))
+
 include $(srcdir)/aminclude_static.am
 
 clean-local: code-coverage-clean
