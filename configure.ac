@@ -16,18 +16,18 @@ AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
 
 
 dnl Tests
-AC_ARG_ENABLE([tests], AC_HELP_STRING([--disable-tests], [Disable tests]))
-AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" != "xno"])
-AS_IF([test "x$enable_tests" != "xno"], [
+AC_ARG_ENABLE([tests], AC_HELP_STRING([--enable-tests], [Disable tests]))
+AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" = "xyes"])
+AS_IF([test "x$enable_tests" = "xyes"], [
   PKG_CHECK_MODULES([CHECK], [check >= 0.11])
   AC_REQUIRE_AUX_FILE([tap-driver.sh])
 ])
 AX_VALGRIND_CHECK
 
 dnl Linters
-AC_ARG_ENABLE([linters], AC_HELP_STRING([--disable-linters], [Disable linters (cppcheck and luacheck)]))
-AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_linters" != "xno"])
-AS_IF([test "x$enable_linters" != "xno"], [
+AC_ARG_ENABLE([linters], AC_HELP_STRING([--enable-linters], [Disable linters (cppcheck and luacheck)]))
+AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_linters" = "xyes"])
+AS_IF([test "x$enable_linters" = "xyes"], [
   AC_PATH_PROG([CPPCHECK], [cppcheck])
 ])
 

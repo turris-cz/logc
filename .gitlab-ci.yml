@@ -11,7 +11,7 @@ build:
   stage: build
   script:
     - ./bootstrap
-    - ./configure --disable-tests --disable-valgrind --disable-linters
+    - ./configure
     - make
   artifacts:
     when: on_failure
@@ -37,7 +37,7 @@ dist:
   needs: [build]
   before_script:
       - ./bootstrap
-      - ./configure
+      - ./configure --enable-tests --enable-valgrind --enable-linters
 
 .test-check:
   extends: .test
@@ -71,7 +71,7 @@ coverage:
   needs: [check]
   script:
     - ./bootstrap
-    - ./configure --enable-code-coverage
+    - ./configure --enable-tests --enable-code-coverage
     - make check-code-coverage V=1
   coverage: '/lines\.\.\.\.\.\.: (\d+.\d+%)/'
   artifacts:
