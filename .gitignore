@@ -8,6 +8,7 @@
 .libs
 *.gperf.c
 logc-*.tar.gz
+logc-*.tar.xz
 logc-*.zip
 
 # Test outputs
