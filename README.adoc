@@ -1,12 +1,160 @@
-Logging for C (LogC)
-====================
+= Logging for C (LogC)
+CZ.NIC z.s.p.o. <packaging@turris.cz>
+v1.0, 2020-06-14
+:icons:
 
 This is library for C for logging. It is able to output to any stream (file,
 socket, stdout, ...) as well as to syslog. It optionally outputs colors and source
-code line.
+code line and more.
 
 It is loosely designed close to Python logging but is intended to be versatile in
 C and primarily easy to use no matter if you are writing library or application.
 
 This library tries to introduce minimum amount of additional dependencies to be as
 simple to include as possible.
+
+
+== Dependencies
+
+* On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone]
+
+Build dependencies:
+
+* https://www.gnu.org/software/gperf[gperf]
+
+For bootstrap (not release tarballs):
+
+* autotools
+* autoconf-archive
+
+For tests:
+
+* https://libcheck.github.io/check[check]
+* Optionally http://www.valgrind.org[valgrind]
+* For linting https://github.com/danmar/cppcheck[cppcheck]
+* For coverage http://ltp.sourceforge.net/coverage/lcov.php[lcov]
+
+
+== Compilation
+
+To compile this library you have to run:
+
+----
+ ./bootstrap
+ ./configure
+ make
+----
+
+Subsequent installation can be done with `make install`.
+
+
+
+== LogC log in general
+
+In general every component such as library or separate submodule should have its
+own log with appropriate name set. Application then can choose how to configure
+logging for different components.
+
+=== Severity
+
+Every log line has severity level. There are following severities:
+
+critical:: should be used for messages causing program exit or restart or any
+  other such drastic measure. This is intended as last measure for program to take
+  if somethings goes horribly wrong. This level can't be suppressed (this is
+  design decision).
+
+error:: should be used for recoverable problems that highly influence program
+  flow. There are commonly reports about outcomes that are not expected and
+  commonly mean that standard program functionality was compromised.
+
+warning:: should be used for unexpected findings. Warnings are not essentially a
+  problems but rather something that user should review to ensure smooth
+  functionality.
+
+notice:: can be considered as warning with less priority or rather more
+  significant informational message. This should commonly be used to tell users
+  about completed important operations.
+
+info:: are general informational messages. Note that in default verbosity this
+  level is hidden. It should be used to inform user about 
+
+debug:: should be used for reports about deeper functionality. This level is
+  hidden in default verbosity level. These reports should still be somewhat
+  readable by user. Do not use it for info that only developer can understand to.
+
+trace:: is lowest verbosity level available. It is in default verbosity hidden. It
+  is intended to be used for dumps of internal state that are handy for deep dive
+  debugging. This level is pretty much solely intended for reports from developer
+  to developer. It can be used to let users to record output and send it to
+  developers to trace program execution without needing to recreate conditions.
+
+=== Default output
+
+In default logs are printed to standard error output in format such as:
+
+ Name: Message: Standard error message
+
+Initial `Name:` is printed only if name of log is non-empty. The same thing
+applies on standard error message. No message is printed if `errno == 0`.
+
+With debug verbosity is default output expanded by adding message source in
+following form:
+
+ Name(file:line,function): Message: Standard error message
+
+Where `file` is name of source file, `line` is source line in file and `function`
+is function name message is printed from.
+
+[TIP]
+In reference to output formating the following is format string used by default
+output: `%(_%(_%n%)%(d(%f:%i,%c)%): %)%m%(_: %e%)`
+
+
+
+== Usage
+
+There are two types of usages for this library. You are either implementing a
+library or an application. The difference is just in configuration being performed
+or not. Libraries are expected to just define log and use it while applications
+are expected to configure both its own log as well as any library log.
+
+First we have to define log. You can use `LOG(name)` macro in case of library
+and `APP_LOG(name)` in case of application. The difference is that in case of
+application log has no name identifier.
+
+
+
+== Running tests
+
+LogC contains basic tests in directory tests. To run all tests you can just simply
+run:
+
+----
+ make check
+----
+
+You can also run tests with Valgrind:
+
+----
+ make check-valgrind
+----
+
+To run checks with just one specific Valgrind test such as memtest you can run:
+
+----
+ make check-valgrind-memcheck
+----
+
+Source code of project can be also linted with cppcheck by running:
+
+----
+ make lint
+----
+
+There is also possibility to generate code coverage for test cases. To do so you
+can run:
+
+----
+ make check-code-coverage
+----
