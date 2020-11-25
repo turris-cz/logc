@@ -23,8 +23,8 @@ tests/*.trs
 *-coverage.info
 
 ## Autotools
-/m4
-/aux
+/.m4
+/.aux
 # http://www.gnu.org/software/automake
 Makefile
 Makefile.in

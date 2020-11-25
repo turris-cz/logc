@@ -9,5 +9,3 @@ lint: $(linted_files)
 		--template='{file}:{line},{severity},{id},{message}' \
 		--inline-suppr \
 		 $^
-
-# vim: ft=automake

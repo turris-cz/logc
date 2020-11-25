@@ -10,4 +10,7 @@ CLEANFILES = $(gperf_files)
 .PHONY: gen-gperf
 gen-gperf: $(gperf_files)
 
-# vim: ft=automake
+# Suffix rule for .c tries to be applied on .gperf.c and that leads to warning on
+# circular dependency. Adding .gperf to list of suffixes overrules .c suffix and
+# resolves circular dependency.
+SUFFIXES = .gperf
