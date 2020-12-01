@@ -30,7 +30,7 @@ AX_VALGRIND_CHECK
 
 dnl Linters
 AC_ARG_ENABLE([linters], AC_HELP_STRING([--enable-linters], [Disable linters (cppcheck and luacheck)]))
-AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_linters" = "xyes"])
+AM_CONDITIONAL([ENABLE_LINTERS], [test "x$enable_linters" = "xyes"])
 AS_IF([test "x$enable_linters" = "xyes"], [
   AC_PATH_PROG([CPPCHECK], [cppcheck])
 ])

@@ -24,6 +24,10 @@ include $(srcdir)/gperf.am
 
 
 linted_files = $(liblogc_la_SOURCES) $(include_HEADERS)
+if ENABLE_LINTERS
 include $(srcdir)/lint.am
+endif
 
+if ENABLE_TESTS
 include $(srcdir)/tests/Makefile.am
+endif

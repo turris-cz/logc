@@ -14,6 +14,8 @@ check_PROGRAMS = %reldir%/unittests
 	$(builddir)/liblogc_argp.la \
 	$(CHECK_LIBS)
 
+linted_files += $(%canon_reldir%_unittests_SOURCES)
+
 
 LOG_DRIVER = \
 	env AM_TAP_AWK='$(AWK)' TEST_OUTPUT_TAP="/dev/stdout" \
