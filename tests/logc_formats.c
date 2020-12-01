@@ -40,18 +40,18 @@ static void setup_tlog() {
 	};
 }
 
-static void setup_color() {
-	setup_tlog();
-	log_add_output(tlog, stderr, LOG_F_COLORS, LL_INFO,
-			LOG_FP_COLOR "%m" LOG_FP_COLOR_CLEAR);
-}
-
 static void teardown_tlog() {
 	log_free(tlog);
 	free(tlog);
 
 	fclose(stderr);
 	stderr = orig_stderr;
+}
+
+static void setup_color() {
+	setup_tlog();
+	log_add_output(tlog, stderr, LOG_F_COLORS, LL_INFO,
+			LOG_FP_COLOR "%m" LOG_FP_COLOR_CLEAR);
 }
 
 struct color_format_tests {
@@ -76,6 +76,59 @@ START_TEST(check_color_format) {
 }
 END_TEST
 
+static void setup_level_name() {
+	setup_tlog();
+	log_add_output(tlog, stderr, 0, LL_INFO, LOG_FP_LEVEL_NAME);
+}
+
+struct level_name_format_tests {
+	enum log_level level;
+	const char *out;
+} level_name_format_tests[] = {
+	{LL_TRACE, "TRACE\n"},
+	{LL_DEBUG, "DEBUG\n"},
+	{LL_INFO, "INFO\n"},
+	{LL_NOTICE, "NOTICE\n"},
+	{LL_WARNING, "WARNING\n"},
+	{LL_ERROR, "ERROR\n"},
+	{LL_CRITICAL, "CRITICAL\n"},
+};
+
+START_TEST(check_level_name_format) {
+	log_set_level(tlog, LL_TRACE);
+	log(tlog, level_name_format_tests[_i].level, " foo");
+
+	fflush(stderr);
+	ck_assert_str_eq(stderr_data, level_name_format_tests[_i].out);
+}
+END_TEST
+
+START_TEST(check_origin_disabled_format) {
+	log_add_output(tlog, stderr, 0, LL_INFO, LOG_FP_ORIGIN " %m");
+
+	log(tlog, LL_NOTICE, "foo");
+
+	fflush(stderr);
+	ck_assert_str_eq(stderr_data, "tlog: foo\n");
+}
+END_TEST
+
+START_TEST(check_origin_format) {
+	log_add_output(tlog, stderr, 0, LL_INFO, LOG_FP_ORIGIN " %m");
+	log_set_use_origin(tlog, true);
+
+	unsigned line = __LINE__ + 1;
+	log(tlog, LL_NOTICE, "foo");
+
+	fflush(stderr);
+	char *expected;
+	size_t len = asprintf(&expected, "tlog(%s:%d,%s): foo\n", __FILE__, line, __func__);
+	ck_assert_int_eq(stderr_len, len);
+	ck_assert_str_eq(stderr_data, expected);
+	free(expected);
+}
+END_TEST
+
 
 void logc_formats_tests(Suite *suite) {
 	TCase *color = tcase_create("color format");
@@ -83,4 +136,16 @@ void logc_formats_tests(Suite *suite) {
 	tcase_add_loop_test(color, check_color_format, 0,
 			sizeof(color_format_tests) / sizeof(struct color_format_tests));
 	suite_add_tcase(suite, color);
+
+	TCase *level_name = tcase_create("level name format");
+	tcase_add_checked_fixture(level_name, setup_level_name, teardown_tlog);
+	tcase_add_loop_test(level_name, check_level_name_format, 0,
+			sizeof(level_name_format_tests) / sizeof(struct level_name_format_tests));
+	suite_add_tcase(suite, level_name);
+
+	TCase *origin = tcase_create("origin format");
+	tcase_add_checked_fixture(origin, setup_tlog, teardown_tlog);
+	tcase_add_test(origin, check_origin_disabled_format);
+	tcase_add_test(origin, check_origin_format);
+	suite_add_tcase(suite, origin);
 }
