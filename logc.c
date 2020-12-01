@@ -40,6 +40,7 @@ enum format_fields {
 	FF_SOURCE_FUNC,
 	FF_STD_ERR,
 	FF_IF,
+	FF_ELSE,
 	FF_IFEND,
 };
 
@@ -363,6 +364,9 @@ static const struct format *if_seek_forward(const struct format *format,
 				case FF_IF:
 					depth++;
 					break;
+				case FF_ELSE:
+					if (depth > 1)
+						break;
 				case FF_IFEND:
 					depth--;
 					if (depth == 0)
@@ -401,11 +405,32 @@ static const struct format *if_seek_forward(const struct format *format,
 				// This condition is empty if we skipped it. Otherwise it is not.
 				empty = f->type == FF_IFEND;
 				break;
+			case FF_ELSE:
 			case FF_IFEND:
 				return f;
 		}
 		if (!empty)
 			return format;
+	}
+	return NULL;
+}
+
+static const struct format *else_seek_forward(const struct format *format) {
+	size_t depth = 1;
+	for (; format; format = format->next) {
+		switch (format->type) {
+			case FF_IF:
+				depth++;
+				break;
+			case FF_IFEND:
+				depth--;
+				if (depth == 0)
+					return format;
+				break;
+			default:
+				// Ignore the rest
+				break;
+		}
 	}
 	return NULL;
 }
@@ -475,6 +500,11 @@ void _log(log_t log, enum log_level level,
 					format = if_seek_forward(format, level, out->is_terminal,
 							out->use_colors, use_origin, str_empty(log->name),
 							msg_size == 0, stderrno == 0);
+					break;
+				case FF_ELSE:
+					// Just skip else block as it is termination of valid
+					// condition.
+					format = else_seek_forward(format);
 					break;
 				case FF_IFEND:
 					// Everything already done in FF_IF

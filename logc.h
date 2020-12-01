@@ -79,12 +79,12 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 // ERROR level has bright red color
 // CRITICAL level has red color
 #define LOG_FP_COLOR \
-	"%(P%(C\033[31m%)%(c%(E\033[31;1m%)%)%(e%(W\033[33;1m%)%)%(w%(N\033[37;1m%)%)%(i\033[37m%)%)"
+	"%(P%(C\033[31m%|%(E\033[31;1m%|%(W\033[33;1m%|%(N\033[37;1m%|%(i\033[37m%)%)%)%)%)%)"
 #define LOG_FP_COLOR_CLEAR "%(P\033[0m%)"
 
 // Level name
 #define LOG_FP_LEVEL_NAME \
-	"%(CCRITICAL%)%(c%(EERROR%)%)%(e%(WWARNING%)%)%(w%(NNOTICE%)%)%(n%(IINFO%)%)%(i%(DDEBUG%)%)%(dTRACE%)"
+	"%(CCRITICAL%|%(EERROR%|%(WWARNING%|%(NNOTICE%|%(IINFO%|%(DDEBUG%|TRACE%)%)%)%)%)%)"
 
 // This standard prefix format for origin of message. It provides name of log and
 // origin of message in code (if of course that is enabled and provided).
@@ -136,6 +136,7 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 //        if colors are not used.
 //   %(P: Start of colored output condition. Text in condition is printed only if 
 //        colors are used in output.
+//   %|:  Else in condition block
 //   %):  End of condition block
 //   %%:  Plain %
 //  Single FILE can be added only once. If same FILE object is provided multiple
