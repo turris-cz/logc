@@ -78,8 +78,13 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 // WARNING level has bright yellow color
 // ERROR level has bright red color
 // CRITICAL level has red color
-#define LOG_FP_COLOR "%(P%(C\033[31m%)%(c%(E\033[31;1m%)%)%(e%(W\033[33;1m%)%)%(w%(N\033[37;1m%)%)%(i\033[37m%)%)"
+#define LOG_FP_COLOR \
+	"%(P%(C\033[31m%)%(c%(E\033[31;1m%)%)%(e%(W\033[33;1m%)%)%(w%(N\033[37;1m%)%)%(i\033[37m%)%)"
 #define LOG_FP_COLOR_CLEAR "%(P\033[0m%)"
+
+// Level name
+#define LOG_FP_LEVEL_NAME \
+	"%(CCRITICAL%)%(c%(EERROR%)%)%(e%(WWARNING%)%)%(w%(NNOTICE%)%)%(n%(IINFO%)%)%(i%(DDEBUG%)%)%(dTRACE%)"
 
 // This standard prefix format for origin of message. It provides name of log and
 // origin of message in code (if of course that is enabled and provided).
@@ -87,8 +92,8 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 
 //// Some standard output formats ////////////////////////////////////////////////
 #define LOG_FORMAT_PLAIN "%(_%n: %)%m%(_: %e%)"
-#define LOG_FORMAT_DEFAULT (LOG_FP_COLOR "%(_%(p%L:%)" LOG_FP_ORIGIN " %)%m%(_: %e%)" LOG_FP_COLOR_CLEAR)
-#define LOG_FORMAT_FULL (LOG_FP_COLOR "%L:" LOG_FP_ORIGIN " %m%(_: %e%)" LOG_FP_COLOR_CLEAR)
+#define LOG_FORMAT_DEFAULT (LOG_FP_COLOR "%(_%(p" LOG_FP_LEVEL_NAME ":%)" LOG_FP_ORIGIN " %)%m%(_: %e%)" LOG_FP_COLOR_CLEAR)
+#define LOG_FORMAT_FULL (LOG_FP_COLOR LOG_FP_LEVEL_NAME ":" LOG_FP_ORIGIN " %m%(_: %e%)" LOG_FP_COLOR_CLEAR)
 
 //// Output to FILE //////////////////////////////////////////////////////////////
 // Output no colors even when output is detected as capable terminal
@@ -108,18 +113,15 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 //   %f:  Source file of message
 //   %i:  Source line of message (in source file)
 //   %c:  Function message is raised from
-//   %l:  Lowercase string representation of message level
-//   %L:  Uppercase string representation of message level
 //   %e:  Standard error message (empty if errno == 0)
 //   %(_:  Start of not-empty condition. Following text till the end of condition
-//        is printed only if at least one field in it is not empty. It ignores
-//        any constant text and conditions are not considered as field.
-//   %(c: Start of less than critical level of message condition.
+//        is printed only if at least one '%*' field in it is not empty.
 //   %(C: Start of critical level of message condition.
-//   %(e: Start of less than error level of message condition.
 //   %(E: Start of error or higher level of message condition.
-//   %(w: Start of less than warning level of message condition.
 //   %(W: Start of warning or higher level of message condition.
+//   %(c: Start of critical effective level of condition.
+//   %(e: Start of error or higher effective level of message condition.
+//   %(w: Start of warning or higher effective level of message condition.
 //   %(n: Start of less than notice level of message condition.
 //   %(N: Start of notice or higher level of message condition.
 //   %(i: Start of less than info level of message condition.

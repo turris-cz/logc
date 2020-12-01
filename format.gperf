@@ -31,8 +31,6 @@ n| { .type = FF_NAME }
 f| { .type = FF_SOURCE_FILE }
 i| { .type = FF_SOURCE_LINE }
 c| { .type = FF_SOURCE_FUNC }
-L| { .type = FF_LEVEL }
-l| { .type = FF_LEVEL_LOWCASE }
 e| { .type = FF_STD_ERR }
 )| { .type = FF_IFEND }
 (_| { .type = FF_IF, .condition = FIFC_NON_EMPTY }

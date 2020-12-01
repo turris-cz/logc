@@ -215,8 +215,6 @@ struct custom_output_tests {
 	{"%f", "tests/logc.c"},
 	{"%i", "42"},
 	{"%c", "function_name"},
-	{"%l", "info"},
-	{"%L", "INFO"},
 	{"%e", ""},
 	{"%(_empty%)", ""},
 	{"%(_%e empty%)", ""},

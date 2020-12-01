@@ -38,8 +38,6 @@ enum format_fields {
 	FF_SOURCE_FILE,
 	FF_SOURCE_LINE,
 	FF_SOURCE_FUNC,
-	FF_LEVEL,
-	FF_LEVEL_LOWCASE,
 	FF_STD_ERR,
 	FF_IF,
 	FF_IFEND,
@@ -78,19 +76,6 @@ struct _log {
 	size_t outs_cnt;
 	bool no_stderr;
 	bool use_origin;
-};
-
-static const  struct level_info {
-	const char *name;
-	int syslog_prio;
-} levels_info[] = {
-	[LL_CRITICAL] = { "CRITICAL", LOG_CRIT },
-	[LL_ERROR] = { "ERROR", LOG_ERR },
-	[LL_WARNING] = { "WARNING", LOG_WARNING },
-	[LL_NOTICE] = { "NOTICE", LOG_NOTICE },
-	[LL_INFO] = { "INFO", LOG_INFO },
-	[LL_DEBUG] = { "DEBUG", LOG_DEBUG },
-	[LL_TRACE] = { "TRACE", LOG_DEBUG }
 };
 
 
@@ -351,11 +336,11 @@ static inline bool str_empty(const char *str) {
 static const struct format *if_seek_forward(const struct format *format,
 		enum log_level level, bool is_term, bool colors, bool use_origin,
 		bool no_log_name, bool no_msg, bool no_err) {
-	bool not_empty_check = true;
+	bool is_not_empty_check = true;
 	bool skip = false;
 	switch (format->condition) {
 		case FIFC_NON_EMPTY:
-			not_empty_check = false;
+			is_not_empty_check = false;
 			break;
 		case FIFC_LEVEL:
 			skip = level < format->if_level;
@@ -365,9 +350,10 @@ static const struct format *if_seek_forward(const struct format *format,
 			break;
 		case FIFC_COLORED:
 			skip = !colors;
+			break;
 	}
 
-	if (not_empty_check) {
+	if (is_not_empty_check) {
 		if (skip == format->if_invert)
 			return format;
 
@@ -389,7 +375,6 @@ static const struct format *if_seek_forward(const struct format *format,
 		return NULL;
 	}
 
-	size_t depth = 1;
 	for (const struct format *f = format->next; f; f = f->next) {
 		bool empty = true;
 		switch (f->type) {
@@ -407,24 +392,17 @@ static const struct format *if_seek_forward(const struct format *format,
 			case FF_SOURCE_FUNC:
 				empty = !use_origin;
 				break;
-			case FF_LEVEL:
-			case FF_LEVEL_LOWCASE:
-				empty = false; // We always have these
-				break;
 			case FF_STD_ERR:
 				empty = no_err;
 				break;
 			case FF_IF:
-				// Use recurse to skip to FF_IFEND if condition is satisfied
+				// Use recurse to skip to FF_IFEND if condition is not satisfied
 				f = if_seek_forward(f, level, is_term, colors, use_origin, no_log_name, no_msg, no_err);
-				if (f->type == FF_IF)
-					depth++;
+				// This condition is empty if we skipped it. Otherwise it is not.
+				empty = f->type == FF_IFEND;
 				break;
 			case FF_IFEND:
-				depth--;
-				if (depth == 0)
-					return f;
-				break;
+				return f;
 		}
 		if (!empty)
 			return format;
@@ -489,15 +467,6 @@ void _log(log_t log, enum log_level level,
 					if (use_origin)
 						fputs(func, f);
 					break;
-				case FF_LEVEL:
-					fputs(levels_info[level].name, f);
-					break;
-				case FF_LEVEL_LOWCASE: {
-						const char *name = levels_info[level].name;
-						while (*name != '\0')
-							putc(tolower(*name++), f);
-						break;
-					}
 				case FF_STD_ERR:
 					if (stderrno)
 						fputs(strerror(stderrno), f);
