@@ -1,0 +1,7 @@
+V0.0 {
+	global:
+		logc_argp_parser;
+		logc_argp_log;
+		
+	local: *;
+};

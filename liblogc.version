@@ -1,0 +1,24 @@
+V0.0 {
+	global:
+		log_free;
+		log_level;
+		log_set_level;
+		log_verbose;
+		log_quiet;
+		log_offset_level;
+
+		log_would_log;
+
+		log_use_origin;
+		log_set_use_origin;
+
+		log_add_output;
+		log_rm_output;
+		log_wipe_outputs;
+		log_stderr_fallback;
+		log_flush;
+
+		_log;
+
+	local: *;
+};

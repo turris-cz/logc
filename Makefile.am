@@ -6,12 +6,14 @@ liblogc_la_SOURCES = logc.c
 liblogc_la_CFLAGS = \
 	-isystem %reldir% \
 	${CODE_COVERAGE_CFLAGS}
+liblogc_la_LDFLAGS = --version-script=%reldir%/liblogc.version
 liblogc_la_LIDADD = ${CODE_COVERAGE_LIBS}
 
 liblogc_argp_la_SOURCES = logc_argp.c
 liblogc_argp_la_CFLAGS = \
 	-isystem %reldir% \
 	${CODE_COVERAGE_CFLAGS}
+liblogc_argp_la_LDFLAGS = --version-script=%reldir%/liblogc_argp.version
 liblogc_argp_la_LIDADD = ${CODE_COVERAGE_LIBS}
 
 include_HEADERS = logc.h logc_util.h logc_assert.h logc_argp.h
