@@ -20,7 +20,7 @@
  */
 #define DEFLOG tlog
 #include <check.h>
-#include "../logc.h"
+#include <logc.h>
 #include <signal.h>
 #include <errno.h>
 

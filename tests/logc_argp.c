@@ -20,8 +20,8 @@
  */
 #define DEFLOG tlog
 #include <check.h>
-#include "../logc.h"
-#include "../logc_argp.h"
+#include <logc.h>
+#include <logc_argp.h>
 
 
 static void setup_tlog() {

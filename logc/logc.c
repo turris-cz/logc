@@ -1,5 +1,4 @@
-/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/)
- *
+/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/) *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights

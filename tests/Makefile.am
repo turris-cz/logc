@@ -8,6 +8,7 @@ check_PROGRAMS = %reldir%/unittests
 	%reldir%/logc_formats.c \
 	%reldir%/logc_argp.c
 %canon_reldir%_unittests_CFLAGS = \
+	-isystem %reldir%/../include \
 	$(CHECK_FLAGS)
 %canon_reldir%_unittests_LDADD = \
 	$(builddir)/liblogc.la \

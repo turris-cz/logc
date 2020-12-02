@@ -39,6 +39,6 @@ dnl Coverage
 AX_CODE_COVERAGE
 
 
-AC_CONFIG_FILES([Makefile logc.pc logc_argp.pc])
+AC_CONFIG_FILES([Makefile logc/logc.pc logc_argp/logc_argp.pc])
 
 AC_OUTPUT

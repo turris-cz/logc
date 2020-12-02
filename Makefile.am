@@ -1,33 +1,20 @@
 ACLOCAL_AMFLAGS = -I .m4
 
-lib_LTLIBRARIES = liblogc.la liblogc_argp.la
-
-liblogc_la_SOURCES = logc.c
-liblogc_la_CFLAGS = \
-	-isystem %reldir% \
-	${CODE_COVERAGE_CFLAGS}
-liblogc_la_LDFLAGS = --version-script=%reldir%/liblogc.version
-liblogc_la_LIDADD = ${CODE_COVERAGE_LIBS}
-
-liblogc_argp_la_SOURCES = logc_argp.c
-liblogc_argp_la_CFLAGS = \
-	-isystem %reldir% \
-	${CODE_COVERAGE_CFLAGS}
-liblogc_argp_la_LDFLAGS = --version-script=%reldir%/liblogc_argp.version
-liblogc_argp_la_LIDADD = ${CODE_COVERAGE_LIBS}
-
-include_HEADERS = logc.h logc_util.h logc_assert.h logc_argp.h
-pkgconfig_DATA = logc.pc logc_argp.pc
+lib_LTLIBRARIES =
+include_HEADERS =
+pkgconfig_DATA =
+gperf_files =
 
 
-gperf_files = format.gperf.c
-$(liblogc_la_OBJECTS): $(gperf_files)
-include $(srcdir)/gperf.am
+include $(srcdir)/logc/Makefile.am
+include $(srcdir)/logc_argp/Makefile.am
+
+include $(srcdir)/utils/gperf.am
 
 
 linted_files = $(liblogc_la_SOURCES) $(include_HEADERS)
 if ENABLE_LINTERS
-include $(srcdir)/lint.am
+include $(srcdir)/utils/lint.am
 endif
 
 if ENABLE_TESTS
