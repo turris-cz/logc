@@ -66,15 +66,18 @@ START_TEST(simple_warning) {
 }
 END_TEST
 
+#define ILL(LEVEL) (LL_##LEVEL + 3)
 const char *level_name[] = {
-	[LL_CRITICAL] = "CRITICAL",
-	[LL_ERROR] = "ERROR",
-	[LL_WARNING] = "WARNING",
-	[LL_NOTICE] = "NOTICE",
-	[LL_INFO] = "INFO",
-	[LL_DEBUG] = "DEBUG",
-	[LL_TRACE] = "TRACE"
+	[ILL(CRITICAL)] = "CRITICAL",
+	[ILL(ERROR)] = "ERROR",
+	[ILL(WARNING)] = "WARNING",
+	[ILL(NOTICE)] = "NOTICE",
+	[ILL(INFO)] = "INFO",
+	[ILL(DEBUG)] = "DEBUG",
+	[ILL(TRACE)] = "TRACE"
 };
+#undef ILL
+#define ILL(LEVEL) (LEVEL + 3)
 
 START_TEST(check_default_level) {
 	log(tlog, _i, "This is message!");
@@ -82,7 +85,7 @@ START_TEST(check_default_level) {
 	fflush(stderr);
 	if (_i >= LL_NOTICE) {
 		char *expected;
-		int len = asprintf(&expected, "%s:tlog: This is message!\n", level_name[_i]);
+		int len = asprintf(&expected, "%s:tlog: This is message!\n", level_name[ILL(_i)]);
 		ck_assert_str_eq(stderr_data, expected);
 		free(expected);
 	} else
@@ -98,7 +101,7 @@ START_TEST(check_all_levels) {
 
 	fflush(stderr);
 	char *expected;
-	int len = asprintf(&expected, "%s:tlog: This is message!\n", level_name[_i]);
+	int len = asprintf(&expected, "%s:tlog: This is message!\n", level_name[ILL(_i)]);
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
@@ -106,6 +109,8 @@ START_TEST(check_all_levels) {
 	ck_assert_int_eq(errno, 0);
 }
 END_TEST
+
+#undef ILL
 
 START_TEST(app_log) {
 	APP_LOG(tlog);
@@ -199,7 +204,7 @@ END_TEST
 START_TEST(check_would_log) {
 	log_set_level(tlog, _i);
 
-	for (enum log_level level = LL_TRACE; level < LL_CRITICAL; level++)
+	for (enum log_message_level level = LL_TRACE; level < LL_CRITICAL; level++)
 		ck_assert(log_would_log(tlog, level) == (level >= _i));
 
 	ck_assert_int_eq(errno, 0);

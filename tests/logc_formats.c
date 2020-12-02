@@ -55,7 +55,7 @@ static void setup_color() {
 }
 
 struct color_format_tests {
-	enum log_level level;
+	enum log_message_level level;
 	const char *out;
 } color_format_tests[] = {
 	{LL_TRACE, "\033[37mfoo\033[0m\n"},
@@ -82,7 +82,7 @@ static void setup_level_name() {
 }
 
 struct level_name_format_tests {
-	enum log_level level;
+	enum log_message_level level;
 	const char *out;
 } level_name_format_tests[] = {
 	{LL_TRACE, "TRACE\n"},
@@ -96,7 +96,7 @@ struct level_name_format_tests {
 
 START_TEST(check_level_name_format) {
 	log_set_level(tlog, LL_TRACE);
-	log(tlog, level_name_format_tests[_i].level, " foo");
+	log(tlog, level_name_format_tests[_i].level, "foo");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, level_name_format_tests[_i].out);

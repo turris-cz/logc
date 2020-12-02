@@ -18,7 +18,7 @@ include_HEADERS = logc.h logc_util.h logc_assert.h logc_argp.h
 pkgconfig_DATA = logc.pc logc_argp.pc
 
 
-gperf_files = envlog.gperf.c format.gperf.c
+gperf_files = format.gperf.c
 $(liblogc_la_OBJECTS): $(gperf_files)
 include $(srcdir)/gperf.am
 

@@ -24,14 +24,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-enum log_level {
-	LL_TRACE,
-	LL_DEBUG,
-	LL_INFO,
-	LL_NOTICE,
-	LL_WARNING,
-	LL_ERROR,
-	LL_CRITICAL,
+enum log_message_level {
+	LL_TRACE = -3,
+	LL_DEBUG = -2,
+	LL_INFO = -1,
+	LL_NOTICE = 0,
+	LL_WARNING = 1,
+	LL_ERROR = 2,
+	LL_CRITICAL = 3,
 };
 
 struct _log;
@@ -52,16 +52,17 @@ typedef struct log* log_t;
 void log_free(log_t) __attribute__((nonnull));
 
 //// Verbosity settings //////////////////////////////////////////////////////////
-enum log_level log_level(log_t) __attribute__((nonnull));
-void log_set_level(log_t, enum log_level) __attribute__((nonnull));
+int log_level(log_t) __attribute__((nonnull));
+void log_set_level(log_t, int level) __attribute__((nonnull));
 void log_verbose(log_t) __attribute__((nonnull));
 void log_quiet(log_t) __attribute__((nonnull));
+void log_offset_level(log_t, int offset) __attribute__((nonnull));
 
 // Check verbosity level to check if output would be used for given level.
 // This should be used when message requires significant processing before logc is
 // called.
 // Returns true if message would be outputed and false if not.
-bool log_would_log(log_t, enum log_level);
+bool log_would_log(log_t, enum log_message_level);
 
 //// Additional options //////////////////////////////////////////////////////////
 // Setting to specify that origin of log should be used. That includes name of
@@ -141,7 +142,7 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 //   %%:  Plain %
 //  Single FILE can be added only once. If same FILE object is provided multiple
 //  times then it replaces original.
-void log_add_output(log_t, FILE*, int flags, enum log_level, const char *format)
+void log_add_output(log_t, FILE*, int flags, int level, const char *format)
 	__attribute__((nonnull));
 
 // Remove provided FILE from registered outputs of log. Note that this won't
@@ -183,7 +184,7 @@ void log_unchain(log_t master, log_t slave) __attribute__((nonnull));
 
 
 //// Log function and helper macros //////////////////////////////////////////////
-void _log(log_t, enum log_level,
+void _log(log_t, enum log_message_level,
 		const char *file, size_t line, const char *func,
 		const char *format, ...) __attribute__((nonnull,format(printf, 6, 7)));
 

@@ -38,7 +38,7 @@ static void teardown_tlog() {
 }
 
 static const struct argp_levels {
-	enum log_level level;
+	enum log_message_level level;
 	int argc;
 	char **argv;
 } argp_q_v_values[] = {
@@ -47,10 +47,10 @@ static const struct argp_levels {
 	{LL_NOTICE, 3, (char*[]){"t", "--quiet", "--verbose"}},
 	{LL_ERROR, 2, (char*[]){"t", "-qq"}},
 	{LL_CRITICAL, 2, (char*[]){"t", "-qqq"}},
-	{LL_CRITICAL, 2, (char*[]){"t", "-qqqq"}},
+	{LL_CRITICAL + 1, 2, (char*[]){"t", "-qqqq"}},
 	{LL_DEBUG, 2, (char*[]){"t", "-vv"}},
 	{LL_TRACE, 2, (char*[]){"t", "-vvv"}},
-	{LL_TRACE, 2, (char*[]){"t", "-vvvv"}},
+	{LL_TRACE - 1, 2, (char*[]){"t", "-vvvv"}},
 };
 
 
