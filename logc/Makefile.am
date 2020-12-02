@@ -5,7 +5,9 @@ include_HEADERS += \
 	include/logc_assert.h
 pkgconfig_DATA += %reldir%/logc.pc
 
-liblogc_la_SOURCES = %reldir%/logc.c
+liblogc_la_SOURCES = \
+	%reldir%/logc.c \
+	%reldir%/format.c
 liblogc_la_CFLAGS = \
 	-isystem include \
 	${CODE_COVERAGE_CFLAGS}

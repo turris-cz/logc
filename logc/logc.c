@@ -26,40 +26,10 @@
 #include <ctype.h>
 #include <syslog.h>
 #include <unistd.h>
+#include "format.h"
 
 #define ENV_LOG_VAR "LOG_LEVEL"
 
-enum format_fields {
-	FF_TEXT,
-	FF_MESSAGE,
-	FF_NAME,
-	FF_SOURCE_FILE,
-	FF_SOURCE_LINE,
-	FF_SOURCE_FUNC,
-	FF_STD_ERR,
-	FF_IF,
-	FF_ELSE,
-	FF_IFEND,
-};
-
-enum format_if_condition {
-	FIFC_NON_EMPTY,
-	FIFC_LEVEL,
-	FIFC_TERMINAL,
-	FIFC_COLORED,
-};
-
-struct format {
-	enum format_fields type;
-
-	char *text;
-
-	enum format_if_condition condition;
-	bool if_invert;
-	enum log_message_level if_level;
-
-	struct format *next;
-};
 
 struct log_output {
 	FILE *f;
@@ -84,8 +54,6 @@ LOG(logc_internal)
 static inline enum log_message_level message_level_sanity(int l) {
 	return l > LL_CRITICAL ? LL_CRITICAL : l < LL_TRACE ? LL_TRACE : l;
 }
-
-static void free_format(struct format*);
 
 static int level_from_env() {
 	char *envlog = getenv(ENV_LOG_VAR);
@@ -162,53 +130,6 @@ bool log_use_origin(log_t log) {
 void log_set_use_origin(log_t log, bool use) {
 	log_allocate(log);
 	log->_log->use_origin = use;
-}
-
-#include "format.gperf.c"
-
-static struct format *parse_format(const char *format) {
-	struct format *first = NULL;
-	struct format *f;
-	while (*format != '\0') {
-		struct format *new = malloc(sizeof *new);
-		bool plain_text = true;
-		if (*format == '%') {
-			format++;
-			const struct gperf_format *fg;
-			size_t len = 0;
-			do fg = gperf_format(format, ++len); while (!fg && len <= 2);
-			if (fg != NULL) {
-				*new = fg->f;
-				format += len;
-				plain_text = false;
-			}
-			// Note: if fd == NULL then we eat up %
-		}
-		if (plain_text) {
-			// First character is not considered as if it is % it was already detected
-			const char *next = strchrnul(format + 1, '%');
-			*new = (struct format){
-				.type = FF_TEXT,
-				.text = strndup(format, next - format),
-			};
-			format = next;
-		}
-		if (first)
-			f->next = new;
-		else
-			first = new;
-		f = new;
-	}
-	return first;
-}
-
-static void free_format(struct format *f) {
-	while (f) {
-		struct format *tmp = f;
-		f = f->next;
-		free(tmp->text);
-		free(tmp);
-	}
 }
 
 static void new_log_output(struct log_output *out, FILE *f, int level, const char *format, int flags) {
