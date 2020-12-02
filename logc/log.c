@@ -18,35 +18,18 @@
  * SOFTWARE.
  */
 #define DEFLOG log_logc_internal
-#include <logc.h>
-#include <logc_util.h>
+#include "log.h"
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
 #include <syslog.h>
 #include <unistd.h>
+#include "log.h"
 #include "format.h"
+#include "output.h"
 
 #define ENV_LOG_VAR "LOG_LEVEL"
-
-
-struct log_output {
-	FILE *f;
-	int level;
-	struct format *format;
-	bool use_colors;
-	bool is_terminal;
-	bool autoclose;
-};
-
-struct _log {
-	int level;
-	struct log_output *outs;
-	size_t outs_cnt;
-	bool no_stderr;
-	bool use_origin;
-};
 
 
 LOG(logc_internal)
@@ -61,7 +44,7 @@ static int level_from_env() {
 	return envlog == NULL ? 0 : atoi(envlog);
 }
 
-static void log_allocate(log_t log) {
+void log_allocate(log_t log) {
 	if (log->_log)
 		return;
 	log->_log = malloc(sizeof *log->_log);
@@ -72,8 +55,6 @@ static void log_allocate(log_t log) {
 		.no_stderr = false,
 	};
 }
-
-static void free_log_output(struct log_output *out, bool close_f);
 
 void log_free(log_t log) {
 	if (!log->_log)
@@ -132,129 +113,7 @@ void log_set_use_origin(log_t log, bool use) {
 	log->_log->use_origin = use;
 }
 
-static void new_log_output(struct log_output *out, FILE *f, int level, const char *format, int flags) {
-	// TODO we can simplify format by removing color and terminal conditions
-	*out = (typeof(*out)){
-		.f = f,
-		.level = level,
-		.format = parse_format(format),
-		.use_colors = (flags & LOG_F_COLORS) && !(flags & LOG_F_NO_COLORS),
-		.is_terminal = false,
-		.autoclose = flags & LOG_F_AUTOCLOSE,
-	};
 
-	int fd = fileno(f); errno = 0;
-	if (fd != -1)
-		out->is_terminal = isatty(fd);
-
-	if (!(flags & (LOG_F_NO_COLORS | LOG_F_COLORS)))
-		out->use_colors = out->is_terminal;
-}
-
-static void free_log_output(struct log_output *out, bool close_f) {
-	if (!out)
-		return;
-	if (close && out->autoclose)
-		fclose(out->f);
-	free_format(out->format);
-}
-
-void log_add_output(log_t log, FILE *file, int flags, int level, const char *format) {
-	log_allocate(log);
-	size_t index = log->_log->outs_cnt;
-	for (size_t i = 0; i < log->_log->outs_cnt; i++) // Locate if already present
-		if (file == log->_log->outs[i].f) {
-			free_log_output(log->_log->outs + i, false);
-			index = i;
-			break;
-		}
-
-	// We do not expect huge amount of outputs so optimizing addition to array for
-	// speed is less beneficial over optimizing for memory (fitting exactly)
-	if (index == log->_log->outs_cnt)
-		log->_log->outs = realloc(log->_log->outs,
-				++log->_log->outs_cnt * sizeof(struct log_output));
-
-	new_log_output(log->_log->outs + index, file, level, format, flags);
-}
-
-bool log_rm_output(log_t log, FILE *file) {
-	log_allocate(log);
-	for (size_t i = 0; i < log->_log->outs_cnt; i++) {
-		struct log_output *out = log->_log->outs + i;
-		if (out->f == file) {
-			free_log_output(out, true);
-			log->_log->outs_cnt--;
-			memmove(out, out + 1, (log->_log->outs_cnt - i) * sizeof *out);
-			log->_log->outs = realloc(log->_log->outs,
-				log->_log->outs_cnt * sizeof *out);
-			return true;
-		}
-	}
-	return false;
-}
-
-void log_wipe_outputs(log_t log) {
-	if (!log->_log)
-		return;
-	for (size_t i = 0; i < log->_log->outs_cnt; i++)
-		free_log_output(log->_log->outs + i, true);
-	free(log->_log->outs);
-	log->_log->outs_cnt = 0;
-	log->_log->outs = NULL;
-}
-
-void log_stderr_fallback(log_t log, bool enabled) {
-	log_allocate(log);
-	log->_log->no_stderr = !enabled;
-}
-
-void log_flush(log_t log) {
-	if (log->_log)
-		for (size_t i = 0; i < log->_log->outs_cnt; i++)
-			fflush(log->_log->outs[i].f);
-	fflush(stderr); // alway flush stderr to cover cases when outs were just added
-};
-
-
-void log_syslog_enable(log_t log) {
-	NOT_IMPLEMENTED;
-}
-
-void log_syslog_enablef(log_t log, const char *format) {
-	NOT_IMPLEMENTED;
-}
-
-void log_syslog_disable(log_t log) {
-	NOT_IMPLEMENTED;
-}
-
-bool log_syslog_enabled(log_t log) {
-	NOT_IMPLEMENTED;
-}
-
-
-void log_chain(log_t master, log_t slave) {
-	NOT_IMPLEMENTED;
-}
-
-void log_unchain(log_t master, log_t slave) {
-	NOT_IMPLEMENTED;
-}
-
-
-static struct log_output *default_stderr_output() {
-	static struct log_output *out = NULL;
-	if (out && out->f != stderr) {
-		free_log_output(out, false);
-		out = NULL;
-	}
-	if (out == NULL) {
-		out = malloc(sizeof *out);
-		new_log_output(out, stderr, 0, LOG_FORMAT_DEFAULT, 0);
-	}
-	return out;
-}
 
 static inline bool str_empty(const char *str) {
 	return !str || *str == '\0';

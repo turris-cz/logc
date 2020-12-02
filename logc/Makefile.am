@@ -6,8 +6,10 @@ include_HEADERS += \
 pkgconfig_DATA += %reldir%/logc.pc
 
 liblogc_la_SOURCES = \
-	%reldir%/logc.c \
-	%reldir%/format.c
+	%reldir%/log.c \
+	%reldir%/output.c \
+	%reldir%/format.c \
+	%reldir%/syslog.c
 liblogc_la_CFLAGS = \
 	-isystem include \
 	${CODE_COVERAGE_CFLAGS}
