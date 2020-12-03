@@ -10,7 +10,7 @@ RUN \
     autoconf autoconf-archive automake libtool \
     make pkg-config gcc gperf \
     check cppcheck valgrind lcov \
-	zip \
+	zip xz-utils \
     && \
   apt-get clean
 
