@@ -29,6 +29,7 @@
 #include "format.h"
 #include "output.h"
 #include "level.h"
+#include "util.h"
 
 LOG(logc_internal)
 
@@ -65,21 +66,6 @@ bool log_would_log(log_t log, enum log_message_level msg_level) {
 		return false;
 	} else
 		return verbose_filter(msg_level, log, NULL);
-}
-
-bool log_use_origin(log_t log) {
-	return log->_log && log->_log->use_origin;
-}
-
-void log_set_use_origin(log_t log, bool use) {
-	log_allocate(log);
-	log->_log->use_origin = use;
-}
-
-
-
-static inline bool str_empty(const char *str) {
-	return !str || *str == '\0';
 }
 
 static const struct format *if_seek_forward(const struct format *format,

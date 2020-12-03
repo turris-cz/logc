@@ -17,53 +17,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "level.h"
+#include "log.h"
+#include "util.h"
 
-#define ENV_LOG_LEVEL_VAR "LOG_LEVEL"
+#define ENV_LOG_ORIGIN "LOG_ORIGIN"
 
-static int log_level_from_env() {
-	static int level = 0;
+static bool log_origin_from_env() {
+	static bool log_origin = false;
 	static bool loaded = false;
-	if (!loaded) {
-		char *envlog = getenv(ENV_LOG_LEVEL_VAR);
-		// atoi returns 0 on error and that is our default
-		level = envlog ? atoi(envlog) : 0;
-		loaded = true;
-	}
-	return level;
+	if (!loaded)
+		log_origin = !str_empty(getenv(ENV_LOG_ORIGIN));
+	return log_origin;
 }
 
-bool verbose_filter(enum log_message_level msg_level, log_t log, struct log_output *out) {
-	return msg_level - 
-		(log->_log ? log->_log->level : 0) -
-		(out ? out->level : 0) -
-		log_level_from_env()
-		>= 0;
+bool log_use_origin(log_t log) {
+	if (log->_log)
+		return log->_log->use_origin;
+	else
+		return log_origin_from_env();
 }
 
-int log_level(log_t log) {
+void log_set_use_origin(log_t log, bool use) {
 	log_allocate(log);
-	return log->_log->level;
-}
-
-void log_set_level(log_t log, int level) {
-	log_allocate(log);
-	log->_log->level = level;
-}
-
-void log_verbose(log_t log) {
-	log_allocate(log);
-	printf("pre level %d\n", log->_log->level);
-	log->_log->level--;
-	printf("level %d\n", log->_log->level);
-}
-
-void log_quiet(log_t log) {
-	log_allocate(log);
-	log->_log->level++;
-}
-
-void log_offset_level(log_t log, int offset) {
-	log_allocate(log);
-	log->_log->level += offset;
+	log->_log->use_origin = use;
 }
