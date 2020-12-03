@@ -7,6 +7,7 @@ pkgconfig_DATA += %reldir%/logc.pc
 
 liblogc_la_SOURCES = \
 	%reldir%/log.c \
+	%reldir%/level.c \
 	%reldir%/output.c \
 	%reldir%/format.c \
 	%reldir%/syslog.c

@@ -230,8 +230,8 @@ struct custom_output_tests {
 	{"%(Etext%)", ""},
 	{"%(wtext%)", "text"},
 	{"%(Wtext%)", ""},
-	{"%(ntext%)", "text"},
-	{"%(Ntext%)", ""},
+	{"%(ntext%)", ""},
+	{"%(Ntext%)", "text"},
 	{"%(itext%)", ""},
 	{"%(Itext%)", "text"},
 	{"%(dtext%)", ""},
@@ -251,14 +251,12 @@ struct custom_output_tests {
 };
 
 START_TEST(check_custom_outputs) {
-	log_set_level(tlog, LL_TRACE);
-
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
-	log_add_output(tlog, f, 0, LL_TRACE, custom_output_tests[_i].format);
+	log_add_output(tlog, f, 0, 0, custom_output_tests[_i].format);
 
-	_log(tlog, LL_INFO, "tests/logc.c", 42, "function_name", "Message");
+	_log(tlog, LL_NOTICE, "tests/logc.c", 42, "function_name", "Message");
 
 	fclose(f);
 	// Last character is always new line so we skip it
@@ -285,14 +283,12 @@ struct custom_output_flag_tests {
 };
 
 START_TEST(check_custom_outputs_flags) {
-	log_set_level(tlog, LL_INFO);
-
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
-	log_add_output(tlog, f, custom_output_flag_tests[_i].flags, LL_INFO, custom_output_flag_tests[_i].format);
+	log_add_output(tlog, f, custom_output_flag_tests[_i].flags, 0, custom_output_flag_tests[_i].format);
 
-	INFO("Message");
+	NOTICE("Message");
 
 	fclose(f);
 	// Last character is always new line so we skip it
@@ -305,44 +301,40 @@ START_TEST(check_custom_outputs_flags) {
 END_TEST
 
 START_TEST(check_custom_output_remove) {
-	log_set_level(tlog, LL_INFO);
-
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
 
-	log_add_output(tlog, f, LOG_F_AUTOCLOSE, LL_INFO, LOG_FORMAT_PLAIN);
-	INFO("output");
+	log_add_output(tlog, f, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_PLAIN);
+	NOTICE("output");
 	ck_assert(log_rm_output(tlog, f));
 	// No need to flush here as f is closed on log_rm_output and so flushed
 	ck_assert_str_eq(buf, "tlog: output\n");
 	free(buf);
 
 	// Test default output as well to verify that we stopped using custom one
-	INFO("stderr");
+	NOTICE("stderr");
 	fflush(stderr);
-	ck_assert_str_eq(stderr_data, "INFO:tlog: stderr\n");
+	ck_assert_str_eq(stderr_data, "NOTICE:tlog: stderr\n");
 
 	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
 START_TEST(check_custom_output_twice) {
-	log_set_level(tlog, LL_INFO);
-
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
 
-	log_add_output(tlog, f, 0, LL_INFO, LOG_FORMAT_PLAIN);
-	INFO("plain");
+	log_add_output(tlog, f, 0, 0, LOG_FORMAT_PLAIN);
+	NOTICE("plain");
 	fflush(f);
 	ck_assert_str_eq(buf, "tlog: plain\n");
 
-	log_add_output(tlog, f, 0, LL_INFO, LOG_FORMAT_DEFAULT);
-	INFO("default");
+	log_add_output(tlog, f, 0, 0, LOG_FORMAT_DEFAULT);
+	NOTICE("default");
 	fflush(f);
-	ck_assert_str_eq(buf, "tlog: plain\nINFO:tlog: default\n");
+	ck_assert_str_eq(buf, "tlog: plain\nNOTICE:tlog: default\n");
 
 	fclose(f);
 	free(buf);
@@ -352,17 +344,15 @@ START_TEST(check_custom_output_twice) {
 END_TEST
 
 START_TEST(check_custom_output_wipe) {
-	log_set_level(tlog, LL_INFO);
-
 	char *buf1, *buf2;
 	size_t bufsiz1, bufsiz2;
 	FILE *f1 = open_memstream(&buf1, &bufsiz1);
 	FILE *f2 = open_memstream(&buf2, &bufsiz2);
 
-	log_add_output(tlog, f1, LOG_F_AUTOCLOSE, LL_INFO, LOG_FORMAT_PLAIN);
-	log_add_output(tlog, f2, LOG_F_AUTOCLOSE, LL_INFO, LOG_FORMAT_PLAIN);
+	log_add_output(tlog, f1, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_PLAIN);
+	log_add_output(tlog, f2, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_PLAIN);
 
-	INFO("Message");
+	NOTICE("Message");
 
 	log_wipe_outputs(tlog);
 	fflush(stderr);
@@ -373,9 +363,9 @@ START_TEST(check_custom_output_wipe) {
 	free(buf1);
 	free(buf2);
 
-	INFO("Message");
+	NOTICE("Message");
 	fflush(stderr);
-	ck_assert_str_eq(stderr_data, "INFO:tlog: Message\n");
+	ck_assert_str_eq(stderr_data, "NOTICE:tlog: Message\n");
 
 	ck_assert_int_eq(errno, 0);
 }

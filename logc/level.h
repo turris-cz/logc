@@ -17,25 +17,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _LOGC_OUTPUT_H_
-#define _LOGC_OUTPUT_H_
+#ifndef _LOGC_LEVEL_H_
+#define _LOGC_LEVEL_H_
 #include "log.h"
 #include <logc.h>
-#include "format.h"
 
-struct log_output {
-	FILE *f;
-	int level;
-	struct format *format;
-	bool use_colors;
-	bool is_terminal;
-	bool autoclose;
-};
-
-void new_log_output(struct log_output *out, FILE *f, int level,
-		const char *format, int flags);
-void free_log_output(struct log_output *out, bool close_f);
-
-struct log_output *default_stderr_output();
+bool verbose_filter(enum log_message_level, log_t, struct log_output *out)
+	__attribute__((nonnull(2)));
 
 #endif

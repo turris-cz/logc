@@ -28,9 +28,7 @@
 #include "log.h"
 #include "format.h"
 #include "output.h"
-
-#define ENV_LOG_VAR "LOG_LEVEL"
-
+#include "level.h"
 
 LOG(logc_internal)
 
@@ -38,21 +36,16 @@ static inline enum log_message_level message_level_sanity(int l) {
 	return l > LL_CRITICAL ? LL_CRITICAL : l < LL_TRACE ? LL_TRACE : l;
 }
 
-static int level_from_env() {
-	char *envlog = getenv(ENV_LOG_VAR);
-	// atoi returns 0 on error and that is our default
-	return envlog == NULL ? 0 : atoi(envlog);
-}
-
 void log_allocate(log_t log) {
 	if (log->_log)
 		return;
 	log->_log = malloc(sizeof *log->_log);
 	*log->_log = (typeof(*log->_log)){
-		.level = level_from_env(),
+		.level = 0,
 		.outs = NULL,
 		.outs_cnt = 0,
 		.no_stderr = false,
+		.use_origin = false,
 	};
 }
 
@@ -64,44 +57,14 @@ void log_free(log_t log) {
 	log->_log = NULL;
 }
 
-int log_level(log_t log) {
-	log_allocate(log);
-	return log->_log->level;
-}
-
-void log_set_level(log_t log, int level) {
-	log_allocate(log);
-	log->_log->level = level;
-}
-
-void log_verbose(log_t log) {
-	log_allocate(log);
-	printf("pre level %d\n", log->_log->level);
-	log->_log->level--;
-	printf("level %d\n", log->_log->level);
-}
-
-void log_quiet(log_t log) {
-	log_allocate(log);
-	log->_log->level++;
-}
-
-void log_offset_level(log_t log, int offset) {
-	log_allocate(log);
-	log->_log->level += offset;
-}
-
-bool log_would_log(log_t log, enum log_message_level level) {
-	log_allocate(log);
-	int loglevel = level - log->_log->level;
-	if (log->_log->outs) {
+bool log_would_log(log_t log, enum log_message_level msg_level) {
+	if (log->_log && log->_log->outs) {
 		for (size_t i = 0; i < log->_log->outs_cnt; i++)
-			if (loglevel >= log->_log->outs[i].level)
+			if (verbose_filter(msg_level, log, &log->_log->outs[i]))
 				return true;
+		return false;
 	} else
-		// Default output is used that has always zero as level.
-		return loglevel >= 0;
-	return false;
+		return verbose_filter(msg_level, log, NULL);
 }
 
 bool log_use_origin(log_t log) {
@@ -222,20 +185,9 @@ static const struct format *else_seek_forward(const struct format *format) {
 
 void _log(log_t log, enum log_message_level msg_level,
 		const char *file, size_t line, const char *func,
-		const char *format, ...) {
+		const char *msgformat, ...) {
 	int stderrno = errno;
 	msg_level = message_level_sanity(msg_level);
-	if (!log_would_log(log, msg_level))
-		return;
-
-	va_list args;
-	va_start(args, format);
-	size_t msg_size = vsnprintf(NULL, 0, format, args);
-	va_end(args);
-	char msg[msg_size + 1];
-	va_start(args, format);
-	vsprintf(msg, format, args);
-	va_end(args);
 
 	size_t cnt = 1;
 	struct log_output *outs = default_stderr_output();
@@ -246,12 +198,16 @@ void _log(log_t log, enum log_message_level msg_level,
 		} else if (log->_log->no_stderr)
 			cnt = 0;
 	}
-	bool use_origin = log->_log && log->_log->use_origin;
+	bool use_origin = log_use_origin(log);
 
-	int level = msg_level - log->_log->level;
+	va_list args;
+	va_start(args, msgformat);
+	bool msg_empty = vsnprintf(NULL, 0, msgformat, args) == 0;
+	va_end(args);
+
 	for (size_t i = 0; i < cnt; i++) {
 		struct log_output *out = outs + i;
-		if (level < out->level)
+		if (!verbose_filter(msg_level, log, &outs[i]))
 			continue;
 		const struct format *format = outs[i].format;
 		do {
@@ -259,9 +215,12 @@ void _log(log_t log, enum log_message_level msg_level,
 				case FF_TEXT:
 					fputs(format->text, out->f);
 					break;
-				case FF_MESSAGE:
-					fputs(msg, out->f);
-					break;
+				case FF_MESSAGE: {
+					va_list args;
+					va_start(args, msgformat);
+					fprintf(out->f, msgformat, args);
+					va_end(args);
+					break; }
 				case FF_NAME:
 					if (log->name)
 						fputs(log->name, out->f);
@@ -285,7 +244,7 @@ void _log(log_t log, enum log_message_level msg_level,
 				case FF_IF:
 					format = if_seek_forward(format, msg_level, out->is_terminal,
 							out->use_colors, use_origin, str_empty(log->name),
-							msg_size == 0, stderrno == 0);
+							msg_empty, stderrno == 0);
 					break;
 				case FF_ELSE:
 					// Just skip else block as it is termination of valid

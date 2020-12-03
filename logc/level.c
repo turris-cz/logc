@@ -17,25 +17,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _LOGC_OUTPUT_H_
-#define _LOGC_OUTPUT_H_
+#define DEFLOG log_logc_internal
 #include "log.h"
-#include <logc.h>
-#include "format.h"
 
-struct log_output {
-	FILE *f;
-	int level;
-	struct format *format;
-	bool use_colors;
-	bool is_terminal;
-	bool autoclose;
-};
+#define ENV_LOG_LEVEL_VAR "LOG_LEVEL"
 
-void new_log_output(struct log_output *out, FILE *f, int level,
-		const char *format, int flags);
-void free_log_output(struct log_output *out, bool close_f);
+static int log_level_from_env() {
+	static int level = 0;
+	static bool loaded = false;
+	if (!loaded) {
+		char *envlog = getenv(ENV_LOG_LEVEL_VAR);
+		// atoi returns 0 on error and that is our default
+		level = envlog ? atoi(envlog) : 0;
+		loaded = true;
+	}
+	return level;
+}
 
-struct log_output *default_stderr_output();
+bool verbose_filter(enum log_message_level msg_level, log_t log, struct log_output *out) {
+	return msg_level - 
+		(log->_log ? log->_log->level : 0) -
+		(out ? out->level : 0) -
+		log_level_from_env()
+		>= 0;
+}
 
-#endif
+int log_level(log_t log) {
+	log_allocate(log);
+	return log->_log->level;
+}
+
+void log_set_level(log_t log, int level) {
+	log_allocate(log);
+	log->_log->level = level;
+}
+
+void log_verbose(log_t log) {
+	log_allocate(log);
+	printf("pre level %d\n", log->_log->level);
+	log->_log->level--;
+	printf("level %d\n", log->_log->level);
+}
+
+void log_quiet(log_t log) {
+	log_allocate(log);
+	log->_log->level++;
+}
+
+void log_offset_level(log_t log, int offset) {
+	log_allocate(log);
+	log->_log->level += offset;
+}
