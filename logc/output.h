@@ -23,19 +23,24 @@
 #include <logc.h>
 #include "format.h"
 
-struct log_output {
+struct output {
 	FILE *f;
 	int level;
-	struct format *format;
+	const struct format *format;
+	bool free_format;
 	bool use_colors;
 	bool is_terminal;
 	bool autoclose;
 };
 
-void new_log_output(struct log_output *out, FILE *f, int level,
+void new_output(struct output *out, FILE *f, int level,
 		const char *format, int flags);
-void free_log_output(struct log_output *out, bool close_f);
+void free_output(struct output *out, bool close_f);
 
-struct log_output *default_stderr_output();
+void syslog_output(struct output *out, char **str, size_t *str_len,
+		const struct format *format);
+void free_syslog_output(struct output *out);
+
+const struct output *default_stderr_output();
 
 #endif

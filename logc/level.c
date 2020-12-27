@@ -33,7 +33,7 @@ static int log_level_from_env() {
 	return level;
 }
 
-bool verbose_filter(enum log_message_level msg_level, log_t log, struct log_output *out) {
+bool verbose_filter(enum log_message_level msg_level, log_t log, const struct output *out) {
 	return msg_level - 
 		(log->_log ? log->_log->level : 0) -
 		(out ? out->level : 0) -
@@ -53,9 +53,7 @@ void log_set_level(log_t log, int level) {
 
 void log_verbose(log_t log) {
 	log_allocate(log);
-	printf("pre level %d\n", log->_log->level);
 	log->_log->level--;
-	printf("level %d\n", log->_log->level);
 }
 
 void log_quiet(log_t log) {

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Output format field `%|` that is handled as "else" inside conditions
 - Support for output level offset
 - Function `log_offset_level` to set level relative to current setting
+- Support for output to syslog
+- New log creation helper macro `DAEMON_LOG` for applications commonly started in
+  background
 
 ### Changed
 - Output format not-empty condition do not investigate sub-conditions, instead it

@@ -22,12 +22,12 @@
 #include <unistd.h>
 #include <errno.h>
 
-void new_log_output(struct log_output *out, FILE *f, int level, const char *format, int flags) {
-	// TODO we can simplify format by removing color and terminal conditions
+void new_output_f(struct output *out, FILE *f, int level, const struct format *format, int flags) {
 	*out = (typeof(*out)){
 		.f = f,
 		.level = level,
-		.format = parse_format(format),
+		.format = format,
+		.free_format = false,
 		.use_colors = (flags & LOG_F_COLORS) && !(flags & LOG_F_NO_COLORS),
 		.is_terminal = false,
 		.autoclose = flags & LOG_F_AUTOCLOSE,
@@ -41,12 +41,37 @@ void new_log_output(struct log_output *out, FILE *f, int level, const char *form
 		out->use_colors = out->is_terminal;
 }
 
-void free_log_output(struct log_output *out, bool close_f) {
+void new_output(struct output *out, FILE *f, int level, const char *format, int flags) {
+	struct format *fformat = parse_format(format);
+	new_output_f(out, f, level, fformat, flags);
+	out->free_format = true;
+}
+
+void free_output(struct output *out, bool close_f) {
 	if (!out)
 		return;
 	if (close_f && out->autoclose)
 		fclose(out->f);
-	free_format(out->format);
+	if (out->free_format)
+		free_format((struct format*)out->format);
+}
+
+void syslog_output(struct output *out, char **str, size_t *str_len,
+		const struct format *format) {
+	*out = (typeof(*out)){
+		.f = open_memstream(str, str_len),
+		.level = 0,
+		.format = format ?: default_format(),
+		.use_colors = false,
+		.is_terminal = false,
+		.autoclose = false,
+	};
+}
+
+void free_syslog_output(struct output *out) {
+	if (out->format != default_format())
+		free_format((struct format*)out->format);
+	fclose(out->f);
 }
 
 void log_add_output(log_t log, FILE *file, int flags, int level, const char *format) {
@@ -54,7 +79,7 @@ void log_add_output(log_t log, FILE *file, int flags, int level, const char *for
 	size_t index = log->_log->outs_cnt;
 	for (size_t i = 0; i < log->_log->outs_cnt; i++) // Locate if already present
 		if (file == log->_log->outs[i].f) {
-			free_log_output(log->_log->outs + i, false);
+			free_output(log->_log->outs + i, false);
 			index = i;
 			break;
 		}
@@ -63,17 +88,17 @@ void log_add_output(log_t log, FILE *file, int flags, int level, const char *for
 	// speed is less beneficial over optimizing for memory (fitting exactly)
 	if (index == log->_log->outs_cnt)
 		log->_log->outs = realloc(log->_log->outs,
-				++log->_log->outs_cnt * sizeof(struct log_output));
+				++log->_log->outs_cnt * sizeof(struct output));
 
-	new_log_output(log->_log->outs + index, file, level, format, flags);
+	new_output(log->_log->outs + index, file, level, format, flags);
 }
 
 bool log_rm_output(log_t log, FILE *file) {
 	log_allocate(log);
 	for (size_t i = 0; i < log->_log->outs_cnt; i++) {
-		struct log_output *out = log->_log->outs + i;
+		struct output *out = log->_log->outs + i;
 		if (out->f == file) {
-			free_log_output(out, true);
+			free_output(out, true);
 			log->_log->outs_cnt--;
 			memmove(out, out + 1, (log->_log->outs_cnt - i) * sizeof *out);
 			log->_log->outs = realloc(log->_log->outs,
@@ -88,7 +113,7 @@ void log_wipe_outputs(log_t log) {
 	if (!log->_log)
 		return;
 	for (size_t i = 0; i < log->_log->outs_cnt; i++)
-		free_log_output(log->_log->outs + i, true);
+		free_output(log->_log->outs + i, true);
 	free(log->_log->outs);
 	log->_log->outs_cnt = 0;
 	log->_log->outs = NULL;
@@ -106,15 +131,15 @@ void log_flush(log_t log) {
 	fflush(stderr); // alway flush stderr to cover cases when outs were just added
 };
 
-struct log_output *default_stderr_output() {
-	static struct log_output *out = NULL;
+const struct output *default_stderr_output() {
+	static struct output *out = NULL;
 	if (out && out->f != stderr) {
-		free_log_output(out, false);
+		free_output(out, false);
 		out = NULL;
 	}
 	if (out == NULL) {
 		out = malloc(sizeof *out);
-		new_log_output(out, stderr, 0, LOG_FORMAT_DEFAULT, 0);
+		new_output_f(out, stderr, 0, default_format(), 0);
 	}
 	return out;
 }

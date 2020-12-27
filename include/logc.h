@@ -37,16 +37,21 @@ enum log_message_level {
 struct _log;
 struct log {
 	const char *name;
+	bool syslog;
 	struct _log *_log;
 };
 typedef struct log* log_t;
 
 #define APP_LOG(NAME) \
-	struct log _log_ ## NAME = (struct log){.name = NULL, ._log = NULL }; \
+	struct log _log_ ## NAME = (struct log){.name = NULL, ._log = NULL, .syslog = false }; \
+	log_t log_ ## NAME = &_log_ ## NAME;
+
+#define DAEMON_LOG(NAME) \
+	struct log _log_ ## NAME = (struct log){.name = NULL, ._log = NULL, .syslog = true }; \
 	log_t log_ ## NAME = &_log_ ## NAME;
 
 #define LOG(NAME) \
-	struct log _log_ ## NAME = (struct log){.name = #NAME, ._log = NULL }; \
+	struct log _log_ ## NAME = (struct log){.name = #NAME, ._log = NULL, .syslog = false }; \
 	log_t log_ ## NAME = &_log_ ## NAME;
 
 void log_free(log_t) __attribute__((nonnull));
@@ -157,19 +162,13 @@ void log_wipe_outputs(log_t) __attribute__((nonnull));
 // Fallback is used if no other output is configured.
 void log_stderr_fallback(log_t, bool enabled) __attribute__((nonnull));
 
+// Set format used to output messages to syslog
+void log_syslog_format(log_t, const char *format) __attribute__((nonnull));
+
 // Flush all outputs
 // This should be always called when your program is about to exit to ensure that
 // all logs were correctly delivered to logs (syslog is the only exception).
 void log_flush(log_t) __attribute__((nonnull));
-
-//// Output to Syslog ////////////////////////////////////////////////////////////
-// Set if logs should be send to syslog
-void log_syslog_enable(log_t) __attribute__((nonnull));
-void log_syslog_enablef(log_t, const char *format) __attribute__((nonnull));
-// Disable 
-void log_syslog_disable(log_t) __attribute__((nonnull));
-// Check if logs are passed to syslog
-bool log_syslog_enabled(log_t) __attribute__((nonnull));
 
 
 //// Chaining ////////////////////////////////////////////////////////////////////

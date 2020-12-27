@@ -66,3 +66,17 @@ void free_format(struct format *f) {
 		free(tmp);
 	}
 }
+
+void log_syslog_format(log_t log, const char *format) {
+	log_allocate(log);
+	if (log->_log->syslog_format)
+		free_format(log->_log->syslog_format);
+	log->_log->syslog_format = parse_format(format);
+}
+
+const struct format *default_format() {
+	static struct format *format = NULL;
+	if (format == NULL)
+		format = parse_format(LOG_FORMAT_DEFAULT);
+	return format;
+}

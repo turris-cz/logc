@@ -10,8 +10,7 @@ liblogc_la_SOURCES = \
 	%reldir%/level.c \
 	%reldir%/origin.c \
 	%reldir%/output.c \
-	%reldir%/format.c \
-	%reldir%/syslog.c
+	%reldir%/format.c
 liblogc_la_CFLAGS = \
 	-isystem include \
 	${CODE_COVERAGE_CFLAGS}

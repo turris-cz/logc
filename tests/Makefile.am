@@ -6,6 +6,7 @@ check_PROGRAMS = %reldir%/unittests
 	%reldir%/unittests.c \
 	%reldir%/logc.c \
 	%reldir%/logc_formats.c \
+	%reldir%/logc_syslog.c \
 	%reldir%/logc_argp.c
 %canon_reldir%_unittests_CFLAGS = \
 	-isystem %reldir%/../include \
@@ -13,7 +14,14 @@ check_PROGRAMS = %reldir%/unittests
 %canon_reldir%_unittests_LDADD = \
 	$(builddir)/liblogc.la \
 	$(builddir)/liblogc_argp.la \
-	$(CHECK_LIBS)
+	$(CHECK_LIBS) \
+	%reldir%/libfakesyslog.la
+
+lib_LTLIBRARIES += %reldir%/libfakesyslog.la
+%canon_reldir%_libfakesyslog_la_SOURCES = %reldir%/fakesyslog.c
+%canon_reldir%_libfakesyslog_la_CFLAGS = $(CHECK_FLAGS)
+%canon_reldir%_libfakesyslog_la_LIBADD = $(CHECK_LIBS)
+
 
 linted_files += $(%canon_reldir%_unittests_SOURCES)
 

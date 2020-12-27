@@ -23,13 +23,15 @@
 #include <logc.h>
 #include <logc_util.h>
 #include "output.h"
+#include "format.h"
 
 // Our own log
 extern log_t log_logc_internal;
 
 struct _log {
 	int level;
-	struct log_output *outs;
+	struct format *syslog_format;
+	struct output *outs;
 	size_t outs_cnt;
 	bool no_stderr;
 	bool use_origin;

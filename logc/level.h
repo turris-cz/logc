@@ -22,7 +22,7 @@
 #include "log.h"
 #include <logc.h>
 
-bool verbose_filter(enum log_message_level, log_t, struct log_output *out)
+bool verbose_filter(enum log_message_level, log_t, const struct output *out)
 	__attribute__((nonnull(2)));
 
 #endif

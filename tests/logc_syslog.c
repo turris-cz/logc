@@ -18,36 +18,58 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#define DEFLOG tlog
 #include <check.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <logc.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <string.h>
+#include <syslog.h>
+#include "fakesyslog.h"
 
-void logc_tests(Suite*);
-void logc_formats_tests(Suite*);
-void logc_syslog_tests(Suite*);
-void logc_argp_tests(Suite*);
+static FILE *orig_stderr;
+static char *stderr_data;
+static size_t stderr_len;
+static log_t tlog;
+
+static void setup_tlog() {
+	fakesyslog_reset();
+
+	errno = 0; // Set to 0 to reset any previous possible error
+	orig_stderr = stderr;
+	stderr = open_memstream(&stderr_data, &stderr_len);
+
+	tlog = malloc(sizeof *tlog);
+	*tlog = (struct log) {
+		.name = "tlog",
+		.syslog = true,
+	};
+	log_stderr_fallback(tlog, false);
+}
+
+static void teardown_tlog() {
+	fakesyslog_free();
+
+	fclose(stderr);
+	stderr = orig_stderr;
+	ck_assert_int_eq(0, stderr_len);
+
+	log_free(tlog);
+	free(tlog);
+}
 
 
-int main(void) {
-	Suite *suite = suite_create("LogC");
+START_TEST(simple_warning) {
+	WARNING("This is warning!");
+	ck_assert_int_eq(1, fakesyslog_cnt);
+	ck_assert_str_eq("WARNING:tlog: This is warning!\n", fakesyslog[0].msg);
+}
+END_TEST
 
-	logc_tests(suite);
-	logc_formats_tests(suite);
-	logc_syslog_tests(suite);
-	logc_argp_tests(suite);
 
-	SRunner *runner = srunner_create(suite);
-	char *test_output_tap = getenv("TEST_OUTPUT_TAP");
-	if (test_output_tap && *test_output_tap != '\0')
-		srunner_set_tap(runner, test_output_tap);
-	char *test_output_xml = getenv("TEST_OUTPUT_XML");
-	if (test_output_xml && *test_output_xml != '\0')
-		srunner_set_xml(runner, test_output_xml);
-	srunner_set_fork_status(runner, CK_FORK); // We have to fork to catch signals
-
-	srunner_run_all(runner, CK_NORMAL);
-	int failed = srunner_ntests_failed(runner);
-
-	srunner_free(runner);
-	return !!failed;
+void logc_syslog_tests(Suite *suite) {
+	TCase *tc_syslog = tcase_create("syslog");
+	tcase_add_test(tc_syslog, simple_warning);
+	tcase_add_checked_fixture(tc_syslog, setup_tlog, teardown_tlog);
+	suite_add_tcase(suite, tc_syslog);
 }

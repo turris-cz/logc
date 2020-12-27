@@ -43,6 +43,7 @@ void log_allocate(log_t log) {
 	log->_log = malloc(sizeof *log->_log);
 	*log->_log = (typeof(*log->_log)){
 		.level = 0,
+		.syslog_format = NULL,
 		.outs = NULL,
 		.outs_cnt = 0,
 		.no_stderr = false,
@@ -53,6 +54,8 @@ void log_allocate(log_t log) {
 void log_free(log_t log) {
 	if (!log->_log)
 		return;
+	if (log->_log->syslog_format)
+		free_format(log->_log->syslog_format);
 	log_wipe_outputs(log);
 	free(log->_log);
 	log->_log = NULL;
@@ -169,6 +172,58 @@ static const struct format *else_seek_forward(const struct format *format) {
 	return NULL;
 }
 
+void do_log(const struct output *out, enum log_message_level msg_level,
+		const char *log_name, const char *file, size_t line, const char *func,
+		bool use_origin, bool msg_empty, int stderrno,
+		const char *msgformat, va_list args) {
+	const struct format *format = out->format;
+	do {
+		switch (format->type) {
+			case FF_TEXT:
+				fputs(format->text, out->f);
+				break;
+			case FF_MESSAGE:
+				vfprintf(out->f, msgformat, args);
+				break;
+			case FF_NAME:
+				if (log_name)
+					fputs(log_name, out->f);
+				break;
+			case FF_SOURCE_FILE:
+				if (use_origin)
+					fputs(file, out->f);
+				break;
+			case FF_SOURCE_LINE:
+				if (use_origin)
+					fprintf(out->f, "%zu", line);
+				break;
+			case FF_SOURCE_FUNC:
+				if (use_origin)
+					fputs(func, out->f);
+				break;
+			case FF_STD_ERR:
+				if (stderrno)
+					fputs(strerror(stderrno), out->f);
+				break;
+			case FF_IF:
+				format = if_seek_forward(format, msg_level, out->is_terminal,
+						out->use_colors, use_origin, str_empty(log_name),
+						msg_empty, stderrno == 0);
+				break;
+			case FF_ELSE:
+				// Just skip else block as it is termination of valid
+				// condition.
+				format = else_seek_forward(format);
+				break;
+			case FF_IFEND:
+				// Everything already done in FF_IF
+				break;
+		}
+		format = format->next;
+	} while (format);
+	fputc('\n', out->f);
+}
+
 void _log(log_t log, enum log_message_level msg_level,
 		const char *file, size_t line, const char *func,
 		const char *msgformat, ...) {
@@ -176,7 +231,7 @@ void _log(log_t log, enum log_message_level msg_level,
 	msg_level = message_level_sanity(msg_level);
 
 	size_t cnt = 1;
-	struct log_output *outs = default_stderr_output();
+	const struct output *outs = default_stderr_output();
 	if (log->_log) {
 		if (log->_log->outs_cnt) {
 			cnt = log->_log->outs_cnt;
@@ -190,60 +245,31 @@ void _log(log_t log, enum log_message_level msg_level,
 	va_start(args, msgformat);
 	bool msg_empty = vsnprintf(NULL, 0, msgformat, args) == 0;
 	va_end(args);
+	va_start(args, msgformat);
+	vfprintf(stdout, "", args);
+	va_end(args);
+
+#define DO_LOG(OUT) { \
+		va_start(args, msgformat); \
+		do_log(&OUT, msg_level, log->name, file, line, func, use_origin, msg_empty, stderrno, msgformat, args); \
+		va_end(args); \
+	}
 
 	for (size_t i = 0; i < cnt; i++) {
-		struct log_output *out = outs + i;
 		if (!verbose_filter(msg_level, log, &outs[i]))
 			continue;
-		const struct format *format = outs[i].format;
-		do {
-			switch (format->type) {
-				case FF_TEXT:
-					fputs(format->text, out->f);
-					break;
-				case FF_MESSAGE: {
-					va_list args;
-					va_start(args, msgformat);
-					fprintf(out->f, msgformat, args);
-					va_end(args);
-					break; }
-				case FF_NAME:
-					if (log->name)
-						fputs(log->name, out->f);
-					break;
-				case FF_SOURCE_FILE:
-					if (use_origin)
-						fputs(file, out->f);
-					break;
-				case FF_SOURCE_LINE:
-					if (use_origin)
-						fprintf(out->f, "%zu", line);
-					break;
-				case FF_SOURCE_FUNC:
-					if (use_origin)
-						fputs(func, out->f);
-					break;
-				case FF_STD_ERR:
-					if (stderrno)
-						fputs(strerror(stderrno), out->f);
-					break;
-				case FF_IF:
-					format = if_seek_forward(format, msg_level, out->is_terminal,
-							out->use_colors, use_origin, str_empty(log->name),
-							msg_empty, stderrno == 0);
-					break;
-				case FF_ELSE:
-					// Just skip else block as it is termination of valid
-					// condition.
-					format = else_seek_forward(format);
-					break;
-				case FF_IFEND:
-					// Everything already done in FF_IF
-					break;
-			}
-			format = format->next;
-		} while (format);
-		fputc('\n', out->f);
+		DO_LOG(outs[i]);
+	}
+
+	if (log->syslog && verbose_filter(msg_level, log, NULL)) {
+		struct output out;
+		char *str;
+		size_t str_len;
+		syslog_output(&out, &str, &str_len, log->_log->syslog_format);
+		DO_LOG(out);
+		free_syslog_output(&out);
+		syslog(msg2syslog_level(msg_level), "%s", str);
+		free(str);
 	}
 
 	errno = 0; // always end with errno zero

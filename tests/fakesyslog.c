@@ -21,33 +21,46 @@
 #include <check.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include "fakesyslog.h"
 
-void logc_tests(Suite*);
-void logc_formats_tests(Suite*);
-void logc_syslog_tests(Suite*);
-void logc_argp_tests(Suite*);
+struct fakesyslog *fakesyslog = NULL;
+size_t fakesyslog_cnt = 0;
 
+void fakesyslog_reset() {
+	fakesyslog_free();
+	fakesyslog = NULL;
+	fakesyslog_cnt = 0;
+}
 
-int main(void) {
-	Suite *suite = suite_create("LogC");
+void fakesyslog_free() {
+	for (size_t i = 0; i < fakesyslog_cnt; i++)
+		free(fakesyslog[i].msg);
+	free(fakesyslog);
+}
 
-	logc_tests(suite);
-	logc_formats_tests(suite);
-	logc_syslog_tests(suite);
-	logc_argp_tests(suite);
+extern void vsyslog(int priority, const char *format, va_list args) {
+	printf("Hey\n");
+	fakesyslog = realloc(fakesyslog, (fakesyslog_cnt + 1) * sizeof *fakesyslog);
+	fakesyslog[fakesyslog_cnt].priority = priority;
+	ck_assert_int_ne(-1, vasprintf(&fakesyslog[fakesyslog_cnt].msg, format, args));
+	fakesyslog_cnt++;
+}
 
-	SRunner *runner = srunner_create(suite);
-	char *test_output_tap = getenv("TEST_OUTPUT_TAP");
-	if (test_output_tap && *test_output_tap != '\0')
-		srunner_set_tap(runner, test_output_tap);
-	char *test_output_xml = getenv("TEST_OUTPUT_XML");
-	if (test_output_xml && *test_output_xml != '\0')
-		srunner_set_xml(runner, test_output_xml);
-	srunner_set_fork_status(runner, CK_FORK); // We have to fork to catch signals
+void __vsyslog_chk(int priority, int flag, const char *format, va_list args) {
+	vsyslog(priority, format, args);
+}
 
-	srunner_run_all(runner, CK_NORMAL);
-	int failed = srunner_ntests_failed(runner);
+void syslog (int priority, const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	vsyslog(priority, format, args);
+	va_end(args);
+}
 
-	srunner_free(runner);
-	return !!failed;
+void __syslog_chk(int priority, int flag, const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	__vsyslog_chk(priority, flag, format, args);
+	va_end(args);
 }

@@ -17,7 +17,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <logc.h>
+#include "log.h"
 
 #ifndef _LOGC_PARSER_H_
 #define _LOGC_PARSER_H_
@@ -58,5 +58,6 @@ struct format {
 struct format *parse_format(const char *format);
 void free_format(struct format *f);
 
+const struct format *default_format();
 
 #endif
