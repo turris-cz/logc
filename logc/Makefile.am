@@ -12,7 +12,7 @@ liblogc_la_SOURCES = \
 	%reldir%/output.c \
 	%reldir%/format.c
 liblogc_la_CFLAGS = \
-	-isystem include \
+	-isystem %reldir%/../include \
 	${CODE_COVERAGE_CFLAGS}
 liblogc_la_LDFLAGS = --version-script=%reldir%/liblogc.version
 liblogc_la_LIDADD = ${CODE_COVERAGE_LIBS}

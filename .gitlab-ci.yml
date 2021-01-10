@@ -1,4 +1,4 @@
-image: registry.labs.nic.cz/turris/logc
+image: registry.nic.cz/turris/logc
 
 stages:
   - build
@@ -29,6 +29,7 @@ dist:
     expire_in: 1 month
     paths:
       - logc-*.tar.gz
+      - logc-*.tar.xz
       - logc-*.zip
 
 ## Test stage ####################################################################
@@ -73,12 +74,25 @@ coverage:
     - ./bootstrap
     - ./configure --enable-tests --enable-code-coverage
     - make check-code-coverage V=1
+    - mv logc-*-coverage logc-coverage
   coverage: '/lines\.\.\.\.\.\.: (\d+.\d+%)/'
   artifacts:
     expire_in: 1 month
     expose_as: 'Code Coverage'
     paths:
-    - 'logc-0.1.0-coverage/'
+    - 'logc-coverage/'
 
 ## Release creation ##############################################################
-# TODO
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  needs:
+    - job: dist
+      artifacts: true
+  before_script:
+    - apk update
+    - apk add bash curl
+  script:
+    - .gitlab-ci/release.sh

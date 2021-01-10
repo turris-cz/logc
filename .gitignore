@@ -12,15 +12,14 @@ logc-*.tar.xz
 logc-*.zip
 
 # Test outputs
-tests/unittests
+/tests/unittests
 test-suite*.log
 tests/*.log
 tests/*.trs
 
 # Coverage output
 *.gcno
-*-coverage
-*-coverage.info
+/logc-*-coverage*
 
 ## Autotools
 /.m4

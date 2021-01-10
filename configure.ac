@@ -20,7 +20,7 @@ AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
 
 
 dnl Tests
-AC_ARG_ENABLE([tests], AC_HELP_STRING([--enable-tests], [Disable tests]))
+AC_ARG_ENABLE([tests], AC_HELP_STRING([--enable-tests], [Whether to enable unit tests]))
 AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" = "xyes"])
 AS_IF([test "x$enable_tests" = "xyes"], [
   PKG_CHECK_MODULES([CHECK], [check >= 0.11])
@@ -29,7 +29,7 @@ AS_IF([test "x$enable_tests" = "xyes"], [
 AX_VALGRIND_CHECK
 
 dnl Linters
-AC_ARG_ENABLE([linters], AC_HELP_STRING([--enable-linters], [Disable linters (cppcheck and luacheck)]))
+AC_ARG_ENABLE([linters], AC_HELP_STRING([--enable-linters], [Whether to enable code linting support (cppcheck)]))
 AM_CONDITIONAL([ENABLE_LINTERS], [test "x$enable_linters" = "xyes"])
 AS_IF([test "x$enable_linters" = "xyes"], [
   AC_PATH_PROG([CPPCHECK], [cppcheck])

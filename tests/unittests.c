@@ -21,6 +21,7 @@
 #include <check.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 void logc_tests(Suite*);
 void logc_formats_tests(Suite*);
@@ -49,5 +50,5 @@ int main(void) {
 	int failed = srunner_ntests_failed(runner);
 
 	srunner_free(runner);
-	return !!failed;
+	return (bool)failed;
 }
