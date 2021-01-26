@@ -15,8 +15,11 @@ AM_PROG_AR
 LT_INIT
 PKG_INSTALLDIR
 
-AC_PATH_PROG([GPERF], [gperf])
-AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
+AM_CONDITIONAL([GPERF_GENERATE], [test -f bootstrap])
+AC_CHECK_FILE([bootstrap],[
+       AC_PATH_PROG([GPERF], [gperf])
+       AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
+])
 
 
 dnl Tests
