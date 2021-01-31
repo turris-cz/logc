@@ -20,6 +20,7 @@
  */
 #define DEFLOG tlog
 #include <check.h>
+#include <unistd.h>
 #include <logc.h>
 #include <logc_argp.h>
 
@@ -37,12 +38,24 @@ static void teardown_tlog() {
 	free(logc_argp_log);
 }
 
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+	return ARGP_ERR_UNKNOWN;
+}
+
+const struct argp argp_tlog_parser = {
+	.options = (struct argp_option[]){{NULL}},
+	.parser = parse_opt,
+	.doc = "Some help text",
+	.children = (struct argp_child[]){{&logc_argp_parser, 0, "Logging", 2}, {NULL}},
+};
+
 static const struct argp_levels {
 	enum log_message_level level;
 	int argc;
 	char **argv;
 } argp_q_v_values[] = {
 	{LL_NOTICE, 0, (char*[]){NULL}},
+	{LL_NOTICE, 1, (char*[]){"t"}},
 	{LL_NOTICE, 2, (char*[]){"t", "-vq"}},
 	{LL_NOTICE, 3, (char*[]){"t", "--quiet", "--verbose"}},
 	{LL_ERROR, 2, (char*[]){"t", "-qq"}},
@@ -54,21 +67,34 @@ static const struct argp_levels {
 };
 
 
-static error_t parse_opt(int key, char *arg, struct argp_state *state) {
-	return ARGP_ERR_UNKNOWN;
-}
-
 START_TEST(argp_q_v) {
-	const struct argp argp_parser = {
-		.options = (struct argp_option[]){{NULL}},
-		.parser = parse_opt,
-		.doc = "Some help text",
-		.children = (struct argp_child[]){{&logc_argp_parser, 0, "Logging", 2}, {NULL}},
-	};
-
-	ck_assert_int_eq(0, argp_parse(&argp_parser,
+	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser,
 			argp_q_v_values[_i].argc, argp_q_v_values[_i].argv, 0, NULL, NULL));
 	ck_assert_int_eq(argp_q_v_values[_i].level, log_level(logc_argp_log));
+}
+END_TEST
+
+
+START_TEST(argp_log_file) {
+	char *tmpfile_path = "/tmp/logc_argp_log_file_XXXXXX";
+	//ck_assert(mktemp(tmpfile_path));
+
+	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, 3,
+		(char*[]){"t", "--log-file", tmpfile_path}, 0, NULL, NULL));
+
+	warning(logc_argp_log, "foo");
+	log_flush(logc_argp_log);
+
+	FILE *f = fopen(tmpfile_path, "r");
+	ck_assert(f);
+	char *line = NULL;
+	size_t line_size = 0;
+	ck_assert_int_ge(getline(&line, &line_size, f), 0);
+	ck_assert_str_eq(line, "WARNING:tlog: foo\n");
+	free(line);
+
+	unlink(tmpfile_path);
+	fflush(stderr);
 }
 END_TEST
 
@@ -77,5 +103,6 @@ void logc_argp_tests(Suite *suite) {
 	TCase *argp = tcase_create("argp");
 	tcase_add_checked_fixture(argp, setup_tlog, teardown_tlog);
 	tcase_add_loop_test(argp, argp_q_v, 0, sizeof(argp_q_v_values) / sizeof(struct argp_levels));
+	tcase_add_test(argp, argp_log_file);
 	suite_add_tcase(suite, argp);
 }

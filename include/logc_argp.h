@@ -28,6 +28,10 @@
  *
  * To use it just simply include logc_arpg_parser as child parser in your
  * argp_parser definition and set logc_argp_log to your APP_LOG instance.
+ *
+ * Warning: logc_argp uses internally keys from 1050 till 1100 for options without
+ * short variant. Do not use these for your own options. (To be exact this is
+ * about 'key' in 'struct argp_option'.)
  */
 
 extern const struct argp logc_argp_parser;

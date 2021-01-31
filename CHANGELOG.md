@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for output to syslog
 - New log creation helper macro `DAEMON_LOG` for applications commonly started in
   background
+- `--log-file` argp option
 
 ### Changed
 - Output format not-empty condition do not investigate sub-conditions, instead it
