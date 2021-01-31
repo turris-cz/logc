@@ -33,9 +33,10 @@ void new_output_f(struct output *out, FILE *f, int level, const struct format *f
 		.autoclose = flags & LOG_F_AUTOCLOSE,
 	};
 
-	int fd = fileno(f); errno = 0;
+	int fd = fileno(f);
 	if (fd != -1)
 		out->is_terminal = isatty(fd);
+	errno = 0; // annul possible fileno and isatty errors
 
 	if (!(flags & (LOG_F_NO_COLORS | LOG_F_COLORS)))
 		out->use_colors = out->is_terminal;

@@ -371,6 +371,26 @@ START_TEST(check_custom_output_wipe) {
 }
 END_TEST
 
+// We test here once with real file as memstream does not have fileno while real
+// tmpfile does.
+START_TEST(check_custom_file_output) {
+	FILE *f = tmpfile();
+
+	log_add_output(tlog, f, 0, 0, LOG_FORMAT_PLAIN);
+	NOTICE("Message");
+	log_wipe_outputs(tlog);
+
+	char *line = NULL;
+	size_t line_size = 0;
+	rewind(f);
+	ck_assert_int_ge(getline(&line, &line_size, f), 0);
+	ck_assert_str_eq(line, "tlog: Message\n");
+	ck_assert_int_eq(getline(&line, &line_size, f), -1);
+
+	free(line);
+}
+END_TEST
+
 
 void logc_tests(Suite *suite) {
 	TCase *def_output = tcase_create("default output");
@@ -400,5 +420,6 @@ void logc_tests(Suite *suite) {
 	tcase_add_test(custom_output, check_custom_output_remove);
 	tcase_add_test(custom_output, check_custom_output_twice);
 	tcase_add_test(custom_output, check_custom_output_wipe);
+	tcase_add_test(custom_output, check_custom_file_output);
 	suite_add_tcase(suite, custom_output);
 }
