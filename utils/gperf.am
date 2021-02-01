@@ -1,4 +1,4 @@
-dist_data_DATA = $(gperf_files)
+EXTRA_DIST += $(gperf_files)
 
 if GPERF_GENERATE
 

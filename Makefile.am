@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS = -I .m4
 lib_LTLIBRARIES =
 include_HEADERS =
 pkgconfig_DATA =
+EXTRA_DIST =
 gperf_files =
 
 
