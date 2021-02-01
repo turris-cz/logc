@@ -28,14 +28,27 @@ log_t logc_argp_log = NULL;
 
 enum {
 	ARGPO_LOG_FILE = 1050,
+	ARGPO_SYSLOG,
+	ARGPO_NO_STDERR,
 };
 
+#define BASE_OPTIONS \
+	{"verbose", 'v', NULL, 0, "Increase output verbosity", 1},  \
+	{"quiet", 'q', NULL, 0, "Decrease output verbosity", 1}, \
+	{"log-file", ARGPO_LOG_FILE, "file", 0, "Send logs to provided log file.", 2}
+
 static const struct argp_option options[] = {
-	{"verbose", 'v', NULL, 0, "Increase output verbosity", 1},
-	{"quiet", 'q', NULL, 0, "Decrease output verbosity", 1},
-	{"log-file", ARGPO_LOG_FILE, "file", 0, "Send logs to provided log file. This disables logging to stderr.", 2},
+	BASE_OPTIONS,
+	{"syslog", ARGPO_SYSLOG, NULL, 0, "Send logs to syslog.", 2},
 	{NULL}
 };
+
+static const struct argp_option options_daemon[] = {
+	BASE_OPTIONS,
+	{"no-stderr", ARGPO_NO_STDERR, NULL, 0, "Do not print logs to stderr.", 2},
+	{NULL}
+};
+
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	if (logc_argp_log == NULL)
@@ -54,13 +67,25 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 			else
 				log_add_output(logc_argp_log, file, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_DEFAULT);
 			break; }
+		case ARGPO_SYSLOG:
+			logc_argp_log->syslog = true;
+			// Intentional fall trough
+		case ARGPO_NO_STDERR:
+			log_stderr_fallback(logc_argp_log, false);
+			break;
 		default:
 			return ARGP_ERR_UNKNOWN;
 	};
 	return 0;
 }
 
+
 const struct argp logc_argp_parser = {
 	.options = options,
+	.parser = parse_opt,
+};
+
+const struct argp logc_argp_daemon_parser = {
+	.options = options_daemon,
 	.parser = parse_opt,
 };

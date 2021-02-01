@@ -40,7 +40,6 @@ void fakesyslog_free() {
 }
 
 extern void vsyslog(int priority, const char *format, va_list args) {
-	printf("Hey\n");
 	fakesyslog = realloc(fakesyslog, (fakesyslog_cnt + 1) * sizeof *fakesyslog);
 	fakesyslog[fakesyslog_cnt].priority = priority;
 	ck_assert_int_ne(-1, vasprintf(&fakesyslog[fakesyslog_cnt].msg, format, args));

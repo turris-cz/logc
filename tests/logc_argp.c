@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <logc.h>
 #include <logc_argp.h>
+#include "fakesyslog.h"
 
 
 static void setup_tlog() {
@@ -47,6 +48,13 @@ const struct argp argp_tlog_parser = {
 	.parser = parse_opt,
 	.doc = "Some help text",
 	.children = (struct argp_child[]){{&logc_argp_parser, 0, "Logging", 2}, {NULL}},
+};
+
+const struct argp argp_tlog_daemon_parser = {
+	.options = (struct argp_option[]){{NULL}},
+	.parser = parse_opt,
+	.doc = "Some help text for daemon",
+	.children = (struct argp_child[]){{&logc_argp_daemon_parser, 0, "Logging", 2}, {NULL}},
 };
 
 static const struct argp_levels {
@@ -74,7 +82,6 @@ START_TEST(argp_q_v) {
 }
 END_TEST
 
-
 START_TEST(argp_log_file) {
 	char *tmpfile_path = "/tmp/logc_argp_log_file_XXXXXX";
 	//ck_assert(mktemp(tmpfile_path));
@@ -98,11 +105,25 @@ START_TEST(argp_log_file) {
 }
 END_TEST
 
+START_TEST(argp_syslog) {
+	fakesyslog_reset();
+
+	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, 2,
+		(char*[]){"t", "--syslog"}, 0, NULL, NULL));
+
+	warning(logc_argp_log, "foo");
+
+	ck_assert_int_eq(1, fakesyslog_cnt);
+	ck_assert_str_eq("WARNING:tlog: foo\n", fakesyslog[0].msg);
+}
+END_TEST
+
 
 void logc_argp_tests(Suite *suite) {
 	TCase *argp = tcase_create("argp");
 	tcase_add_checked_fixture(argp, setup_tlog, teardown_tlog);
 	tcase_add_loop_test(argp, argp_q_v, 0, sizeof(argp_q_v_values) / sizeof(struct argp_levels));
 	tcase_add_test(argp, argp_log_file);
+	tcase_add_test(argp, argp_syslog);
 	suite_add_tcase(suite, argp);
 }
