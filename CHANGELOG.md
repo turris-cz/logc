@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable `LOG_LEVEL` is now expected to be number and not string
 - Message level enum renamed from `log_level` to `log_message_level` and values
   are shifted partially to negative
+- `ASSERT` renamed to `assert` and `assert` to `log_assert` in `logc_assert.h`
 
 ### Removed
 - Output format fields `%l` and `%L`
