@@ -18,14 +18,11 @@ simple to include as possible.
 
 * On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone]
 
-Build dependencies:
-
-* https://www.gnu.org/software/gperf[gperf]
-
 For bootstrap (not release tarballs):
 
 * autotools
 * autoconf-archive
+* https://www.gnu.org/software/gperf[gperf]
 
 For tests:
 
@@ -40,13 +37,14 @@ For tests:
 To compile this library you have to run:
 
 ----
- ./bootstrap
  ./configure
  make
 ----
 
 Subsequent installation can be done with `make install`.
 
+When you do not use distribution archive then you have to run initially
+`./bootstrap`.
 
 
 == LogC log in general
@@ -55,9 +53,27 @@ In general every component such as library or separate submodule should have its
 own log with appropriate name set. Application then can choose how to configure
 logging for different components.
 
-=== Severity
+=== Default output
 
-Every log line has severity level. There are following severities:
+By default, logs are printed to standard error output in format such as:
+
+ Name: Message: Standard error message
+
+Initial `Name:` is printed only if name of log is non-empty. The same thing
+applies on standard error message, no message is printed if `errno == 0`.
+
+It is also possible to display logging source. That would be in format:
+
+ Name(file:line,function): Message: Standard error message
+
+Where `file` is name of source file, `line` is source line in file and `function`
+is function name message is printed from.
+
+=== Message severity
+
+Every log message has severity level. These are established levels and convention
+on when to use which severity. LogC defines the following severity levels with suggested
+usage:
 
 critical:: should be used for messages causing program exit or restart or any
   other such drastic measure. This is intended as last measure for program to take
@@ -77,7 +93,7 @@ notice:: can be considered as warning with less priority or rather more
   about completed important operations.
 
 info:: are general informational messages. Note that in default verbosity this
-  level is hidden. It should be used to inform user about 
+  level is hidden. It should be used to inform user about
 
 debug:: should be used for reports about deeper functionality. This level is
   hidden in default verbosity level. These reports should still be somewhat
@@ -89,40 +105,75 @@ trace:: is lowest verbosity level available. It is in default verbosity hidden. 
   to developer. It can be used to let users to record output and send it to
   developers to trace program execution without needing to recreate conditions.
 
-=== Default output
+=== Concept of log verbosity
 
-In default logs are printed to standard error output in format such as:
+LogC provides pretty common concept of message verbosity. That is every message
+has severity assigned and only messages with high enough severity are propagated
+to logs. The limit for propagation is called verbosity and user can change it
+commonly trough configuration of an application.
 
- Name: Message: Standard error message
+In LogC default verbosity is zero and that corresponds to `notice` severity. This
+means that in default only notice, warning, error and critical messages are
+propagated. Following table contains severities with their minimal verbosity
+level.
+|===
+| Message severity | Verbosity level condition
+| critical | < 4
+| error | < 3
+| warning | < 2
+| notice | < 1
+| info | < 0
+| debug | < -1
+| trace | < -2
+|===
 
-Initial `Name:` is printed only if name of log is non-empty. The same thing
-applies on standard error message. No message is printed if `errno == 0`.
+=== Environment variables
 
-With debug verbosity is default output expanded by adding message source in
-following form:
+LogC internally expects and reads few predefined environment variables. The reason
+for this is to allow basic debug print by LogC even before argument parsing and
+program initialization in general.
 
- Name(file:line,function): Message: Standard error message
+LOG_LEVEL::
+  This variables allows you to specify initial log level. Value is expected to be
+  integer. To increase verbosity
 
-Where `file` is name of source file, `line` is source line in file and `function`
-is function name message is printed from.
+LOG_ORIGIN::
+  By setting this environment variable to anything non-empty results in enable of
+  log origin. That is enrichment of log message by source file, line and function.
+  This has of course effect only if log format contains origin fields (default one
+  does).
 
-[TIP]
-In reference to output formating the following is format string used by default
-output: `%(_%(_%n%)%(d(%f:%i,%c)%): %)%m%(_: %e%)`
+[NOTE]
+  These environment variables are read just once so it is in general not a good
+  idea to change/set them in your program unless you are doing it before `exec`.
 
+=== Error reporting and `errno` handling
+
+LogC tries to simplify error reporting by appending standard error message
+(retrieved using `strerror` function) anytime `errno` is not set to zero.
+
+`errno` is automatically set to zero after every message posted to LogC.
+
+[WARNING]
+  LogC error reporting requires careful `errno` usage. You should know which
+  function in your program can set `errno` and always reset `errno` to zero
+  afterwards or log error using LogC.
 
 
 == Usage
 
-There are two types of usages for this library. You are either implementing a
-library or an application. The difference is just in configuration being performed
-or not. Libraries are expected to just define log and use it while applications
-are expected to configure both its own log as well as any library log.
+To use LogC you have to include `logc.h` and link your program or library with
+`liblogc`. For programmers guide refer to appropriate link:./docs/logc.adoc[logc
+documentation].
 
-First we have to define log. You can use `LOG(name)` macro in case of library
-and `APP_LOG(name)` in case of application. The difference is that in case of
-application log has no name identifier.
+LogC provides additional optional extensions documented separately:
 
+- link:./docs/logc_argp.adoc[LogC Argp] that implements common log related
+  arguments.
+- link:./docs/logc_assert.adoc[LogC Assert] providing standard `assert.h`
+  compatibility.
+- link:./docs/logc_util.adoc[LogC Utilities] contains additional non-standard
+  header only utilities.
 
 
 == Running tests

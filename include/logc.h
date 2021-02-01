@@ -123,17 +123,17 @@ void log_set_use_origin(log_t, bool) __attribute__((nonnull));
 //   %(_:  Start of not-empty condition. Following text till the end of condition
 //        is printed only if at least one '%*' field in it is not empty.
 //   %(C: Start of critical level of message condition.
+//   %(c: Start of less than critical level of message condition.
 //   %(E: Start of error or higher level of message condition.
+//   %(e: Start of less than error level of message condition.
 //   %(W: Start of warning or higher level of message condition.
-//   %(c: Start of critical effective level of condition.
-//   %(e: Start of error or higher effective level of message condition.
-//   %(w: Start of warning or higher effective level of message condition.
-//   %(n: Start of less than notice level of message condition.
+//   %(w: Start of less than warning level of message condition.
 //   %(N: Start of notice or higher level of message condition.
-//   %(i: Start of less than info level of message condition.
+//   %(n: Start of less than notice level of message condition.
 //   %(I: Start of info or higher level of message confition.
-//   %(d: Start of less than debug level of message condition.
+//   %(i: Start of less than info level of message condition.
 //   %(D: Start of debug or higher level of message condition.
+//   %(d: Start of less than debug level of message condition.
 //   %(t: Start of not terminal output condition. Text in condition is printed
 //         only if output is not to terminal.
 //   %(T: Start of terminal output condition. Text in condition is printed only if

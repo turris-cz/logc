@@ -1,0 +1,363 @@
+= LogC programmers guide
+
+This document should give you full knowledge on how to use LogC in your
+applications and libraries.
+
+
+== Inclusion
+
+You have to configure your build system to link your library/application with
+`liblogc`. LogC provides `pkg-config` configuration so you can just use `logc` in
+your build system specific way to include it.
+
+In code you have to just include `logc.h` to start.
+
+
+== Log definition and initialization
+
+There are two types of usage for this library. You are either implementing a
+library or an application. The difference is just in configuration being performed
+or not. Libraries are expected to just define log and use it while applications
+are expected to configure both its own log as well as any libraries logs.
+
+First we have to define log. You can use `LOG(name)` macro in case of library,
+`APP_LOG(name)` in case of application and `DAEMON_LOG(name)` in case of daemon
+application. The difference is that in case of application log has no name
+identifier. Additional difference between plain application and daemon log is
+that daemon logs automatically to syslog while plain application does not.
+
+This way you now have defined variable `log_name` where `name`  would be name
+passed to log creating macro. In projects spanning more than one file, that is
+almost every project, it is suggested to define log in dedicated file and
+propagate it by including declaration such as `extern log_t log_name;` in other
+files.
+
+=== Log definition and initialization without macros
+
+Although `LOG(name)`, `APP_LOG(name)` and other macros are easiest way to define
+log it is also beneficial sometimes to define log manually. The reasons can be
+unsatisfiable default configuration of those macros.
+
+To define log without macros you need to have instance of `struct log`. You most
+probably want to just statically define it in your program/library.
+[,C]
+----
+struct log _log_foo = (struct log){
+	.name = "Name",
+	.syslog = false
+};
+----
+Now you can use this log freely, just note that all LogC functions accept pointer
+so you have to pas `_log_foo` as `&_log_foo`. Because of that it is a good idea
+for easier usage to use something like:
+[,C]
+----
+log_t log_foo = &_log_foo;
+----
+
+Structure `struct log` contains following fields:
+
+name:: This is name of log. It should be always some printable text for library
+and suggested to be `NULL` for application.
+
+syslog:: With this boolean you can enable/disable sending of logs to
+syslog. This should be by default set to `true` when you are writing daemon
+expected to run in background and to `false` otherwise.
+
+=== Private log data
+
+In `struct log` there is LogC's private structure `struct _log *_log`. Never ever
+modify this field! This serves as internal state of LogC. You can free it by
+calling `void log_free(log_t)` function. Note that this resets any applied
+settings to default with exception of fields set in `struct log` itself of course.
+
+
+== Logging
+
+Now, let's focus on the logs creation itself. Doing that is in the end as easy
+as using one of the following macros:
+[,C]
+----
+critical(LOG, ...)
+error(LOG, ...)
+warning(LOG, ...)
+notice(LOG, ...)
+info(LOG, ...)
+debug(LOG, ...)
+trace(LOG, ...)
+----
+
+Suggestion on how to choose correct one can be found in
+file:../README.adoc[readme]. All of these macros accept as first argument `log_t`
+instance (pointer to `struct log`) and other arguments are same as for `printf`.
+As an example to print warning containing number you can do
+`warning(log_foo, "Foo: %d", foo)`. Where `log_foo` would be created in *log definition*
+section e.g. using `APP_LOG(foo)`.
+
+Macro `critical(LOG, ...)` not only logs message but also calls `abort()`! Use
+this to handle critical errors causing application exit. Note that you can hook
+your termination routine on abort to cleanup after yourself.
+
+There are also simpler variants of these macros. They have same name but in
+capital letters. To get access to them you have to define macro `DEFLOG` before
+`logc.h` inclusion. Such inclusion including log definition would be:
+[,C]
+----
+#define DEFLOG log_foo
+#include <logc.h>
+LOG(foo);
+----
+Example of usage later on would be `WARNING("Foo: %d", foo);`.
+
+
+== `errno` management
+
+LogC provides built in support for standard `errno` errors. It consist of optional
+standard error string included in message.
+
+[WARNING]
+  You should always be aware of potential `errno` value because of this. `errno`
+  should always be zeroed anytime you ignore some error or after some external
+  code was invoked (except of standard lib C or POSIX). Not doing so can inject
+  some invalid error strings to log messages.
+
+
+== Verbosity setting
+
+Every logger has assigned verbosity level. Only messages with log level higher or
+equal to verbosity are propagated, others are discarded. Map of verbosity level
+and message severity is in link:../README.md[readme].
+
+By default, verbosity level is zero but that can be changed of course. One built
+in option is to use `LOG_LEVEL` environment variable as described in
+link:../README.adoc[readme] but in code this set of functions should be used
+instead:
+[,C]
+----
+void log_set_level(log_t, int level);
+void log_verbose(log_t);
+void log_quiet(log_t);
+void log_offset_level(log_t, int offset);
+----
+The naming convention here should be self explanatory but in any case:
+log_set_level:: set/override level to exactly given one
+log_verbose:: increase verbosity by one (decreases level by one)
+log_quiet:: decrease verbosity by one (increases level by one)
+log_offset_level:: adds given `offset` to verbosity level
+
+[CAUTION]
+  On first glance it might be weird that `log_verbose` decreases level and
+  `log_quiet` increases it but level should be understood as cut off limit for
+  logging.
+
+It is also possible to get current verbosity level by invoking function
+`log_level`. This functions simply returns integer with current level.
+
+
+== Would log
+
+Sometimes, passing message to logs is not as easy as passing data in.
+Sometimes some preprocessing is required to make it even possible to submit
+message to LogC. It would be shame to do all that work to just make LogC decide
+that such message is not going to be propagated thanks to current verbosity
+setting. Exactly for this case LogC provides simple function `log_would_log`.
+[,C]
+----
+bool log_would_log(log_t, enum log_message_level);
+----
+This function returns `true` when message with given level would be propagated and
+`false` if not.
+
+
+== Message origin
+
+Message origin, that is source file, line and function, sometimes can help to
+identify issue very quickly. Because of that printing message origin is built in
+to LogC. By default, print of origin is disabled but that can be changed by either
+environment variable `LOG_ORIGIN` (see like:../README.adoc[readme]) or for
+programmer more importantly by using `log_set_use_origin` function.
+[,C]
+----
+bool log_use_origin(log_t);
+void log_set_use_origin(log_t, bool);
+----
+`log_use_origin` is in this case simple getter and `log_set_use_origin` is simple
+setter.
+
+
+== Custom logging
+
+By default, all logs are printed on standard error output (`stderr`). You can
+specify any other `FILE` object instead. At the same time custom output also
+allows modification of format encapsulating message.
+
+There can be multiple custom outputs added but with initial output being added the
+default logging to standard error output is disabled. You should add `stderr` log
+as the first custom log if you want logs on standard error output because of that.
+
+You can also control usage of default logging to standard error output. The
+function for that is defined as `void log_stderr_fallback(log_t, bool enabled)`.
+Intention of this is to allow disabling of standard error output without need to
+add some dummy custom output.
+
+=== Managing custom outputs
+
+LogC defines following functions used to manage custom outputs:
+[,C]
+----
+void log_add_output(log_t log, FILE* f, int flags, int level, const char *format);
+bool log_rm_output(log_t, FILE*);
+void log_wipe_outputs(log_t);
+----
+
+To add new log output you want to invoke `log_add_output` with arguments:
+log:: This is log instance output to be added to.
+f:: The output file object open for writing that is going to be used for logging.
+flags:: Bitwise OR combination of flags or `0`.
+level:: This is level offset for this output. In most cases you want to just use
+`0` but sometimes you want to have log file that is more of less verbose than
+logger settings.
+format:: The format string used for this output. Unless you want to write your own
+format it is suggested to use `LOG_FORMAT_DEFAULT`. For custom output format see
+next section.
+
+Currently these flags are defined:
+LOG_F_NO_COLORS:: Force no colors even if output file is detected to be terminal.
+LOG_F_COLORS:: Force colors usage even if output file seems to not be terminal.
+LOG_F_AUTOCLOSE:: Instructs LogC to close provided output file object on log free
+or on logs wipe.
+
+`log_add_output` can be also used to update already existing outputs. You just
+have to use same file object as when it was added. This way you can update
+`flags`, `level` and `format`.
+
+You can also selectively remove added outputs using `log_rm_output`. It returns
+`true` if output was successfully removed and `false` when it wasn't located in
+provided log. This function is intentional exception from `LOG_F_AUTOCLOSE` as it
+never closes file object and thus allows you to reuse file object.
+
+And lastly you can just wipe all added outputs from log using `log_wipe_outputs`.
+
+=== Output format
+
+Output format of LogC is printf inspired format string. `%` char is special
+character with expected char after it specifying data to be expanded to. To write
+plain percent sign you have to use `%%`. For future compatibility reasons any
+unknown `%X` combination is eaten up without producing any output.
+
+List of special characters sequences that are simply expanded is in following
+table:
+|===
+| Characters sequence | Data used to replace it
+| `%m` | This is replaced with provided message. Format string should always
+contain this combination.
+| `%n` | This is replaced with log name if there was any specified.
+| `%f` | The source file of message.
+| `%i` | The source line in file of message.
+| `%c` | The function message is called from.
+| `%e` | This is standard error message received using `strerror`.
+| `%%` | Just plain `%`.
+|===
+
+You might have noticed that with exception of `%m` all other fields can be in some
+cases not provided. This creates issues in reasonable format creation. It is
+reasonable for example to split error message from original message such as
+`%m: %e`. The issue is that when there was no error detected (`errno` is zero) we
+would still print `:` after message. To solve this LogC has conditional sections
+in output format. Conditions are opened by `%(X` where `X` is appropriate
+character and closed by `%)`. They also allow usage of "else" in form of `%|`.
+This is table with all sequences:
+|===
+| Character sequence to open condition | Condition
+| `%(C` | Message severity is at least critical. This effectively applies only to
+messages generated using macro such as `critical`.
+| `%(c` | Message severity is less than critical. This means effectively means any
+severity other than critical.
+| `%(E` | Message severity is at least error. This thus includes error as well as
+critical.
+| `%(e` | Message severity is less than error. This means any severity excluding
+critical and error.
+| `%(W` | Message severity is at least warning. This thus includes warning, error
+as well as critical.
+| `%(w` | Message severity is less than warning. In other words any severity
+except of critical, error and warning.
+| `%(N` | Message severity is at least notice. This includes notice, warning,
+error and critical.
+| `%(n` | Message severity is less than notice. This includes info, debug and
+trace.
+| `%(I` | Message severity is at least info. Thus this is all severities except
+debug and trace.
+| `%(i` | Message severity is less than info. In other words severity is debug or
+trace.
+| `%(D` | Message severity is at least debug. Effectively this is any severity
+except of trace.
+| `%(d` | Message severity is less than debug. This effectively means just trace.
+| `%(t` | Output is not terminal (tty).
+| `%(T` | Output is terminal (tty). Use this when you want to include some
+terminal control sequences.
+| `%(p` | Output should not be coloured. In this condition you should provide text
+alternating info you would get by color otherwise.
+| `%(P` | Output can be coloured. Use this condition if you want to output color
+escape codes.
+| `%(_` | This opens non-empty condition. It is considered as fulfilled when there
+is at least one combination that is expanded. The static text is not considered.
+See next paragraph for more info about this condition.
+|===
+
+Most of the conditions should be self explanatory with exception of `%(_`. This
+condition looks forward to format and decides if it is fulfilled based on
+sequences it contains. At least one code has to be non-empty for condition to be
+considered as fulfilled and content in it to be printed/used. Following table show
+when which characters combinations are considered to be expanded and thus
+non-empty condition fulfilled:
+|===
+| Character sequence | Condition for non-empty
+| `%m` | The message is always considered non-empty as it should always be
+provided.
+| `%n` | The name of log can be set to `NULL` in `struct log` and in such case it
+is considered to be empty, otherwise not.
+| `%f` | The source file is considered non-empty when message origin logging is
+enabled.
+| `%i` | The source line in file is considered non-empty when message origin
+logging is enabled.
+| `%c` | The function message is called from is considered non-empty when message
+origin logging is enabled.
+| `%e` | The standard error message is considered empty when `errno` is equal to
+`0`.
+| `%(X` | Any condition is considered as non-empty when that specific condition is
+fulfilled. It doesn't matter if condition itself produces any output, it can be
+just empty. The important part is that condition is fulfilled.
+| `X` | Any plain characters outside recognized sequences are ignored and thus
+considered as empty.
+| `%%` | This is considered as plain character thus considered empty.
+|===
+
+
+== Syslog logging
+
+Although in most cases logging to stderr or custom file is just what you want
+there are cases such as when you are writing some sort of daemon where you just
+want to use Syslog. There are advantages to using Syslog such as direct
+Propagation of message severity and access to additional info such as process ID.
+On server this is must and LogC allows easy to enable syslog support.
+
+To enable syslog you just have to set `syslog` field in logger to `true`.
+[,C]
+----
+log_foo->syslog = true;
+----
+With that any subsequent messages are also passed to syslog (unless you are not
+running one).
+
+You can also change the message format used to create message for syslog.
+[,C]
+----
+void log_syslog_format(log_t, const char *format);
+----
+The `format` here is string with same fields as described in custom output
+section.
+
+
+== Logs chaining
+
+This feature is not implemented yet.

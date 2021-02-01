@@ -1,0 +1,45 @@
+= LogC Argp programmers guide
+
+This describes usage of `logc_assert.h` as a replacement for `assert.h`.
+
+
+== Inclusion
+
+You should include `logc_assert.h` after you setup your log and define `DEFLOG`
+(see link:./logc.adoc[logc documentation]) to get `assert` macro.
+
+Example usage would be:
+[,C]
+----
+#include "log.h"
+#include <logc_assert.h>
+----
+Given that `log.h` contains declaration of log and definition of `DEFLOG`.
+
+
+== Usage
+
+Usage is considerably the same as if you would use `assert` from `assert.h`. That
+means you just provide condition that has to pass as argument:
+[,C]
+----
+assert(foo == 0);
+----
+Message with severity critical is generated when condition is invalid and `abort`
+is called. There is no message generated when condition is valid and execution
+continues.
+
+There is also variant that allows you to specify log object `log_assert`. Usage of
+this macro is same as in case of `assert` with exception that first argument has
+to be log instance.
+[,C]
+----
+log_assert(log_foo, foo == 0);
+----
+
+[NOTE]
+  Notice that compared to `logc.h` macros defined when `DEFLOG` is provided are
+  not with capital letter but rather name of variant that allows log specification
+  just has different name. The reason is to make this really drop in replacement
+  for `assert.h`. We have to implement assert consistent with prototype `void
+  assert(scalar expression)`. That makes it unfortunately inconsistent.
