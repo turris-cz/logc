@@ -20,11 +20,13 @@
 #include "output.h"
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 
 void new_output_f(struct output *out, FILE *f, int level, const struct format *format, int flags) {
 	*out = (typeof(*out)){
 		.f = f,
+		.fd = -1,
 		.level = level,
 		.format = format,
 		.free_format = false,
@@ -33,9 +35,9 @@ void new_output_f(struct output *out, FILE *f, int level, const struct format *f
 		.autoclose = flags & LOG_F_AUTOCLOSE,
 	};
 
-	int fd = fileno(f);
-	if (fd != -1)
-		out->is_terminal = isatty(fd);
+	out->fd = fileno(f);
+	if (out->fd != -1)
+		out->is_terminal = isatty(out->fd);
 	errno = 0; // annul possible fileno and isatty errors
 
 	if (!(flags & (LOG_F_NO_COLORS | LOG_F_COLORS)))
@@ -61,6 +63,7 @@ void syslog_output(struct output *out, char **str, size_t *str_len,
 		const struct format *format) {
 	*out = (typeof(*out)){
 		.f = open_memstream(str, str_len),
+		.fd = -1,
 		.level = 0,
 		.format = format ?: default_format(),
 		.use_colors = false,
@@ -143,4 +146,33 @@ const struct output *default_stderr_output() {
 		new_output_f(out, stderr, 0, default_format(), 0);
 	}
 	return out;
+}
+
+
+void lock_output(const struct output *out) {
+	if (out->fd == -1)
+		return;
+
+	struct flock fl = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+		.l_start = 0,
+		.l_len = 0,
+	};
+	fcntl(out->fd, F_SETLKW, &fl);
+	errno = 0; // ignore failure
+}
+
+void unlock_output(const struct output *out) {
+	if (out->fd == -1)
+		return;
+
+	struct flock fl = {
+		.l_type = F_UNLCK,
+		.l_whence = SEEK_SET,
+		.l_start = 0,
+		.l_len = 0,
+	};
+	fcntl(out->fd, F_SETLKW, &fl);
+	errno = 0; // ignore failure
 }

@@ -21,10 +21,12 @@
 #define _LOGC_OUTPUT_H_
 #include "log.h"
 #include <logc.h>
+#include <sys/types.h>
 #include "format.h"
 
 struct output {
 	FILE *f;
+	int fd;
 	int level;
 	const struct format *format;
 	bool free_format;
@@ -42,5 +44,8 @@ void syslog_output(struct output *out, char **str, size_t *str_len,
 void free_syslog_output(struct output *out);
 
 const struct output *default_stderr_output();
+
+void lock_output(const struct output *out);
+void unlock_output(const struct output *out);
 
 #endif

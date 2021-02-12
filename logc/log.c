@@ -222,6 +222,7 @@ void do_log(const struct output *out, enum log_message_level msg_level,
 		format = format->next;
 	} while (format);
 	fputc('\n', out->f);
+	fflush(out->f);
 }
 
 void _log(log_t log, enum log_message_level msg_level,
@@ -258,7 +259,9 @@ void _log(log_t log, enum log_message_level msg_level,
 	for (size_t i = 0; i < cnt; i++) {
 		if (!verbose_filter(msg_level, log, &outs[i]))
 			continue;
+		lock_output(&outs[i]);
 		DO_LOG(outs[i]);
+		unlock_output(&outs[i]);
 	}
 
 	if (log->syslog && verbose_filter(msg_level, log, NULL)) {
