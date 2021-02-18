@@ -231,6 +231,16 @@ void _log(log_t log, enum log_message_level msg_level,
 	int stderrno = errno;
 	msg_level = message_level_sanity(msg_level);
 
+	// This works with expectation that although there can be as many error as
+	// trace messages in the code the trace messages are likely called while error
+	// message unlikely. In other words the likeliness of log being called
+	// decreases with message level. At the same time the most likely execution is
+	// without debug output so it should be in most cases more optimal to check if
+	// it makes even sense to continue.
+	// TODO we could calculate common level when we set verbosity and just compare
+	if (msg_level < LL_INFO && !log_would_log(log, msg_level))
+		return;
+
 	size_t cnt = 1;
 	const struct output *outs = default_stderr_output();
 	if (log->_log) {
