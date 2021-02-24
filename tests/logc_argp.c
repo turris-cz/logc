@@ -18,25 +18,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#define DEFLOG tlog
 #include <check.h>
-#include <unistd.h>
-#include <logc.h>
 #include <logc_argp.h>
 #include "fakesyslog.h"
+#include "logc_fixtures.h"
 
+struct argp_levels {
+	enum log_message_level level;
+	int argc;
+	char **argv;
+};
 
-static void setup_tlog() {
-	logc_argp_log = malloc(sizeof *logc_argp_log);
-	*logc_argp_log = (struct log) {
-		.name = "tlog"
-	};
-	errno = 0;
-}
-
-static void teardown_tlog() {
-	log_free(logc_argp_log);
-	free(logc_argp_log);
+static void argp_setup_tlog() {
+	setup();
+	logc_argp_log = tlog;
 }
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -57,11 +52,7 @@ const struct argp argp_tlog_daemon_parser = {
 	.children = (struct argp_child[]){{&logc_argp_daemon_parser, 0, "Logging", 2}, {NULL}},
 };
 
-static const struct argp_levels {
-	enum log_message_level level;
-	int argc;
-	char **argv;
-} argp_q_v_values[] = {
+static const struct argp_levels argp_q_v_values[] = {
 	{LL_NOTICE, 0, (char*[]){NULL}},
 	{LL_NOTICE, 1, (char*[]){"t"}},
 	{LL_NOTICE, 2, (char*[]){"t", "-vq"}},
@@ -74,7 +65,6 @@ static const struct argp_levels {
 	{LL_TRACE - 1, 2, (char*[]){"t", "-vvvv"}},
 };
 
-
 START_TEST(argp_q_v) {
 	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser,
 			argp_q_v_values[_i].argc, argp_q_v_values[_i].argv, 0, NULL, NULL));
@@ -82,9 +72,46 @@ START_TEST(argp_q_v) {
 }
 END_TEST
 
+static const struct argp_levels argp_log_level_values[] = {
+	{-87578, 3, (char*[]){"t", "--log-level", "-87578"}},
+	{-4, 3, (char*[]){"t", "--log-level", "-4"}},
+	{LL_TRACE, 3, (char*[]){"t", "--log-level", "-3"}},
+	{LL_DEBUG, 3, (char*[]){"t", "--log-level", "-2"}},
+	{LL_INFO, 3, (char*[]){"t", "--log-level", "-1"}},
+	{LL_NOTICE, 3, (char*[]){"t", "--log-level", "0"}},
+	{LL_WARNING, 3, (char*[]){"t", "--log-level", "1"}},
+	{LL_ERROR, 3, (char*[]){"t", "--log-level", "2"}},
+	{LL_CRITICAL, 3, (char*[]){"t", "--log-level", "3"}},
+	{4, 3, (char*[]){"t", "--log-level", "4"}},
+	{78634, 3, (char*[]){"t", "--log-level", "78634"}},
+	{LL_NOTICE, 0, (char*[]){NULL}},
+};
+
+START_TEST(argp_log_level) {
+	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, argp_log_level_values[_i].argc,
+		argp_log_level_values[_i].argv, 0, NULL, NULL));
+	ck_assert_int_eq(argp_log_level_values[_i].level, log_level(logc_argp_log));
+}
+END_TEST
+
+static const struct argp_levels argp_log_level_invalid_values[] = {
+	{0, 3, (char*[]){"t", "--log-level", ""}},
+	{42, 3, (char*[]){"t", "--log-level", "42number"}},
+	{42, 3, (char*[]){"t", "--log-level", "number42"}},
+	{0, 3, (char*[]){"t", "--log-level", "not_a_number"}},
+	{0, 3, (char*[]){"t", "--log-level", "786341321313234343478678634344"}},
+	{0, 3, (char*[]){"t", "--log-level", "-875788987897979797979678687687"}},
+};
+
+START_TEST(argp_log_level_invalid) {
+	argp_parse(&argp_tlog_parser, argp_log_level_invalid_values[_i].argc,
+		argp_log_level_invalid_values[_i].argv, 0, NULL, NULL);
+}
+END_TEST
+
 START_TEST(argp_log_file) {
-	char *tmpfile_path = "/tmp/logc_argp_log_file_XXXXXX";
-	//ck_assert(mktemp(tmpfile_path));
+	char tmpfile_path[] = "/tmp/logc_argp_log_file_XXXXXX";
+	ck_assert(mktemp(tmpfile_path));
 
 	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, 3,
 		(char*[]){"t", "--log-file", tmpfile_path}, 0, NULL, NULL));
@@ -118,11 +145,15 @@ START_TEST(argp_syslog) {
 }
 END_TEST
 
-
 void logc_argp_tests(Suite *suite) {
 	TCase *argp = tcase_create("argp");
-	tcase_add_checked_fixture(argp, setup_tlog, teardown_tlog);
-	tcase_add_loop_test(argp, argp_q_v, 0, sizeof(argp_q_v_values) / sizeof(struct argp_levels));
+	tcase_add_checked_fixture(argp, argp_setup_tlog, teardown);
+	tcase_add_loop_test(argp, argp_q_v,
+		0, sizeof(argp_q_v_values) / sizeof(*argp_q_v_values));
+	tcase_add_loop_test(argp, argp_log_level,
+		0, sizeof(argp_log_level_values) / sizeof(*argp_log_level_values));
+	tcase_add_loop_exit_test(argp, argp_log_level_invalid, argp_err_exit_status,
+		0, sizeof(argp_log_level_invalid_values) / sizeof(*argp_log_level_invalid_values));
 	tcase_add_test(argp, argp_log_file);
 	tcase_add_test(argp, argp_syslog);
 	suite_add_tcase(suite, argp);

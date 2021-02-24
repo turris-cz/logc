@@ -30,11 +30,13 @@ enum {
 	ARGPO_LOG_FILE = 1050,
 	ARGPO_SYSLOG,
 	ARGPO_NO_STDERR,
+	ARGPO_LOG_LEVEL
 };
 
 #define BASE_OPTIONS \
 	{"verbose", 'v', NULL, 0, "Increase output verbosity", 1},  \
 	{"quiet", 'q', NULL, 0, "Decrease output verbosity", 1}, \
+	{"log-level", ARGPO_LOG_LEVEL, "level", 0, "Set output verbosity level to provided value", 1}, \
 	{"log-file", ARGPO_LOG_FILE, "file", 0, "Send logs to provided log file.", 2}
 
 static const struct argp_option options[] = {
@@ -49,6 +51,19 @@ static const struct argp_option options_daemon[] = {
 	{NULL}
 };
 
+
+static int parse_level(const char *arg, struct argp_state *state) {
+	char *end_ptr;
+	errno = 0;
+	long int result = strtol(arg, &end_ptr, 10);
+	if (errno) // conversion errors
+		argp_error(state, "Invalid log level. Conversion error: %s",
+			strerror(errno));
+	else
+		if (end_ptr == arg || *end_ptr != '\0')
+			argp_error(state, "Invalid log level value. It must be integer.");
+	return result;
+}
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	if (logc_argp_log == NULL)
@@ -72,6 +87,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 			// Intentional fall trough
 		case ARGPO_NO_STDERR:
 			log_stderr_fallback(logc_argp_log, false);
+			break;
+		case ARGPO_LOG_LEVEL:
+			log_set_level(logc_argp_log, parse_level(arg, state));
 			break;
 		default:
 			return ARGP_ERR_UNKNOWN;

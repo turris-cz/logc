@@ -20,36 +20,11 @@
  */
 #define DEFLOG tlog
 #include <check.h>
-#include <logc.h>
 #include <signal.h>
-#include <errno.h>
-
-static FILE *orig_stderr;
-static char *stderr_data;
-static size_t stderr_len;
-static log_t tlog;
-
-static void setup_tlog() {
-	errno = 0; // Set to 0 to reset any previous possible error
-	orig_stderr = stderr;
-	stderr = open_memstream(&stderr_data, &stderr_len);
-
-	tlog = malloc(sizeof *tlog);
-	*tlog = (struct log) {
-		.name = "tlog"
-	};
-}
-
-static void teardown_tlog() {
-	log_free(tlog);
-	free(tlog);
-
-	fclose(stderr);
-	stderr = orig_stderr;
-}
+#include "logc_fixtures.h"
 
 static void setup_color() {
-	setup_tlog();
+	setup();
 	log_add_output(tlog, stderr, LOG_F_COLORS, LL_INFO,
 			LOG_FP_COLOR "%m" LOG_FP_COLOR_CLEAR);
 }
@@ -77,7 +52,7 @@ START_TEST(check_color_format) {
 END_TEST
 
 static void setup_level_name() {
-	setup_tlog();
+	setup();
 	log_add_output(tlog, stderr, 0, LL_INFO, LOG_FP_LEVEL_NAME);
 }
 
@@ -129,22 +104,21 @@ START_TEST(check_origin_format) {
 }
 END_TEST
 
-
 void logc_formats_tests(Suite *suite) {
 	TCase *color = tcase_create("color format");
-	tcase_add_checked_fixture(color, setup_color, teardown_tlog);
+	tcase_add_checked_fixture(color, setup_color, teardown);
 	tcase_add_loop_test(color, check_color_format, 0,
 			sizeof(color_format_tests) / sizeof(struct color_format_tests));
 	suite_add_tcase(suite, color);
 
 	TCase *level_name = tcase_create("level name format");
-	tcase_add_checked_fixture(level_name, setup_level_name, teardown_tlog);
+	tcase_add_checked_fixture(level_name, setup_level_name, teardown);
 	tcase_add_loop_test(level_name, check_level_name_format, 0,
 			sizeof(level_name_format_tests) / sizeof(struct level_name_format_tests));
 	suite_add_tcase(suite, level_name);
 
 	TCase *origin = tcase_create("origin format");
-	tcase_add_checked_fixture(origin, setup_tlog, teardown_tlog);
+	tcase_add_checked_fixture(origin, setup, teardown);
 	tcase_add_test(origin, check_origin_disabled_format);
 	tcase_add_test(origin, check_origin_format);
 	suite_add_tcase(suite, origin);

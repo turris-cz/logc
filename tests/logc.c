@@ -20,41 +20,9 @@
  */
 #define DEFLOG tlog
 #include <check.h>
-#include <logc.h>
 #include <signal.h>
 #include <errno.h>
-
-static FILE *orig_stderr;
-static char *stderr_data;
-static size_t stderr_len;
-static log_t tlog;
-
-static void setup_capture() {
-	errno = 0; // Set to 0 to reset any previous possible error
-	orig_stderr = stderr;
-	stderr = open_memstream(&stderr_data, &stderr_len);
-}
-
-static void teardown_capture() {
-	fclose(stderr);
-	stderr = orig_stderr;
-}
-
-static void setup_tlog() {
-	setup_capture();
-
-	tlog = malloc(sizeof *tlog);
-	*tlog = (struct log) {
-		.name = "tlog"
-	};
-}
-
-static void teardown_tlog() {
-	log_free(tlog);
-	free(tlog);
-
-	teardown_capture();
-}
+#include "logc_fixtures.h"
 
 START_TEST(simple_warning) {
 	WARNING("This is warning!");
@@ -394,7 +362,7 @@ END_TEST
 
 void logc_tests(Suite *suite) {
 	TCase *def_output = tcase_create("default output");
-	tcase_add_checked_fixture(def_output, setup_tlog, teardown_tlog);
+	tcase_add_checked_fixture(def_output, setup, teardown);
 	tcase_add_test(def_output, simple_warning);
 	tcase_add_loop_test(def_output, check_default_level, LL_TRACE, LL_CRITICAL);
 	tcase_add_loop_test(def_output, check_all_levels, LL_TRACE, LL_CRITICAL);
@@ -407,12 +375,12 @@ void logc_tests(Suite *suite) {
 	suite_add_tcase(suite, def_output);
 
 	TCase *would_log = tcase_create("would log check");
-	tcase_add_checked_fixture(would_log, setup_tlog, teardown_tlog);
+	tcase_add_checked_fixture(would_log, setup, teardown);
 	tcase_add_loop_test(would_log, check_would_log, LL_TRACE, LL_CRITICAL);
 	suite_add_tcase(suite, would_log);
 
 	TCase *custom_output = tcase_create("custom output");
-	tcase_add_checked_fixture(custom_output, setup_tlog, teardown_tlog);
+	tcase_add_checked_fixture(custom_output, setup, teardown);
 	tcase_add_loop_test(custom_output, check_custom_outputs, 0,
 			sizeof(custom_output_tests) / sizeof(struct custom_output_tests));
 	tcase_add_loop_test(custom_output, check_custom_outputs_flags, 0,

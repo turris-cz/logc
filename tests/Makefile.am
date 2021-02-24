@@ -7,7 +7,8 @@ check_PROGRAMS = %reldir%/unittests
 	%reldir%/logc.c \
 	%reldir%/logc_formats.c \
 	%reldir%/logc_syslog.c \
-	%reldir%/logc_argp.c
+	%reldir%/logc_argp.c \
+	%reldir%/logc_fixtures.c
 %canon_reldir%_unittests_CFLAGS = \
 	-isystem %reldir%/../include \
 	$(CHECK_FLAGS)

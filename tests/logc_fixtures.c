@@ -18,34 +18,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#define DEFLOG tlog
-#include <check.h>
-#include "fakesyslog.h"
+#include <errno.h>
 #include "logc_fixtures.h"
 
-static void syslog_setup() {
-	fakesyslog_reset();
-	setup();
-	tlog->syslog = true;
-	log_stderr_fallback(tlog, false);
+FILE* orig_stderr;
+char *stderr_data;
+size_t stderr_len;
+log_t tlog;
+
+void setup() {
+	errno = 0; // Set to 0 to reset any previous possible error
+	orig_stderr = stderr;
+	stderr = open_memstream(&stderr_data, &stderr_len);
+	tlog = malloc(sizeof *tlog);
+	*tlog = (struct log) { .name = "tlog" };
 }
 
-static void syslog_teardown() {
-	fakesyslog_free();
-	teardown();
-	ck_assert_int_eq(0, stderr_len);
-}
-
-START_TEST(simple_warning) {
-	WARNING("This is warning!");
-	ck_assert_int_eq(1, fakesyslog_cnt);
-	ck_assert_str_eq("WARNING:tlog: This is warning!\n", fakesyslog[0].msg);
-}
-END_TEST
-
-void logc_syslog_tests(Suite *suite) {
-	TCase *tc_syslog = tcase_create("syslog");
-	tcase_add_checked_fixture(tc_syslog, syslog_setup, syslog_teardown);
-	tcase_add_test(tc_syslog, simple_warning);
-	suite_add_tcase(suite, tc_syslog);
+void teardown() {
+	log_free(tlog);
+	free(tlog);
+	fclose(stderr);
+	stderr = orig_stderr;
 }

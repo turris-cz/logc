@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New log creation helper macro `DAEMON_LOG` for applications commonly started in
   background
 - `--log-file` argp option
+- `--log-level` argp otion
 
 ### Changed
 - Output format not-empty condition do not investigate sub-conditions, instead it
