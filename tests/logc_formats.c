@@ -23,6 +23,9 @@
 #include <signal.h>
 #include "logc_fixtures.h"
 
+void unittests_add_suite(Suite*);
+
+
 static void setup_color() {
 	setup();
 	log_add_output(tlog, stderr, LOG_F_COLORS, LL_INFO,
@@ -104,7 +107,10 @@ START_TEST(check_origin_format) {
 }
 END_TEST
 
-void logc_formats_tests(Suite *suite) {
+__attribute__((constructor))
+static void suite() {
+	Suite *suite = suite_create("logc_formats");
+
 	TCase *color = tcase_create("color format");
 	tcase_add_checked_fixture(color, setup_color, teardown);
 	tcase_add_loop_test(color, check_color_format, 0,
@@ -122,4 +128,6 @@ void logc_formats_tests(Suite *suite) {
 	tcase_add_test(origin, check_origin_disabled_format);
 	tcase_add_test(origin, check_origin_format);
 	suite_add_tcase(suite, origin);
+
+	unittests_add_suite(suite);
 }

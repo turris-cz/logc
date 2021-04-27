@@ -23,23 +23,22 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-void logc_tests(Suite*);
-void logc_formats_tests(Suite*);
-void logc_syslog_tests(Suite*);
-void logc_argp_tests(Suite*);
-void logc_asserts_tests(Suite*);
+static Suite **suites = NULL;
+static size_t suites_len = 0, suites_size = 1;
+
+void unittests_add_suite(Suite *s) {
+	if (suites == NULL || suites_len == suites_size)
+		suites = realloc(suites, (suites_size *= 2) * sizeof *suites);
+	suites[suites_len++] = s;
+}
 
 
 int main(void) {
-	Suite *suite = suite_create("LogC");
+	SRunner *runner = srunner_create(NULL);
 
-	logc_tests(suite);
-	logc_formats_tests(suite);
-	logc_syslog_tests(suite);
-	logc_argp_tests(suite);
-	logc_asserts_tests(suite);
+	for (size_t i = 0; i < suites_len; i++)
+		srunner_add_suite(runner, suites[i]);
 
-	SRunner *runner = srunner_create(suite);
 	char *test_output_tap = getenv("TEST_OUTPUT_TAP");
 	if (test_output_tap && *test_output_tap != '\0')
 		srunner_set_tap(runner, test_output_tap);

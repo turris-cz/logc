@@ -24,6 +24,9 @@
 #include <logc_asserts.h>
 #include "logc_fixtures.h"
 
+void unittests_add_suite(Suite*);
+
+
 void (*postabort_check)();
 
 void abort_handler(int signum){
@@ -351,7 +354,10 @@ START_TEST(floatl_assert_lt_valid3) {
 }
 END_TEST
 
-void logc_asserts_tests(Suite *suite) {
+__attribute__((constructor))
+static void suite() {
+	Suite *suite = suite_create("logc_asserts");
+
 	TCase *asserts_f = tcase_create("asserts fail");
 	tcase_add_checked_fixture(asserts_f, setup_mask_abort, teardown_fail);
 	tcase_add_exit_test(asserts_f, basic_assert, 42);
@@ -400,4 +406,6 @@ void logc_asserts_tests(Suite *suite) {
 	tcase_add_exit_test(asserts_s, floatl_assert_lt_valid2, 0);
 	tcase_add_exit_test(asserts_s, floatl_assert_lt_valid3, 0);
 	suite_add_tcase(suite, asserts_s);
+
+	unittests_add_suite(suite);
 }

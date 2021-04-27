@@ -23,6 +23,9 @@
 #include "fakesyslog.h"
 #include "logc_fixtures.h"
 
+void unittests_add_suite(Suite*);
+
+
 struct argp_levels {
 	enum log_message_level level;
 	int argc;
@@ -145,7 +148,11 @@ START_TEST(argp_syslog) {
 }
 END_TEST
 
-void logc_argp_tests(Suite *suite) {
+
+__attribute__((constructor))
+static void suite() {
+	Suite *suite = suite_create("logc_argp");
+
 	TCase *argp = tcase_create("argp");
 	tcase_add_checked_fixture(argp, argp_setup_tlog, teardown);
 	tcase_add_loop_test(argp, argp_q_v,
@@ -157,4 +164,6 @@ void logc_argp_tests(Suite *suite) {
 	tcase_add_test(argp, argp_log_file);
 	tcase_add_test(argp, argp_syslog);
 	suite_add_tcase(suite, argp);
+
+	unittests_add_suite(suite);
 }

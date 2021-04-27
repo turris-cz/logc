@@ -24,6 +24,9 @@
 #include <errno.h>
 #include "logc_fixtures.h"
 
+void unittests_add_suite(Suite*);
+
+
 START_TEST(simple_warning) {
 	WARNING("This is warning!");
 
@@ -360,7 +363,10 @@ START_TEST(check_custom_file_output) {
 END_TEST
 
 
-void logc_tests(Suite *suite) {
+__attribute__((constructor))
+static void suite() {
+	Suite *suite = suite_create("logc");
+
 	TCase *def_output = tcase_create("default output");
 	tcase_add_checked_fixture(def_output, setup, teardown);
 	tcase_add_test(def_output, simple_warning);
@@ -390,4 +396,6 @@ void logc_tests(Suite *suite) {
 	tcase_add_test(custom_output, check_custom_output_wipe);
 	tcase_add_test(custom_output, check_custom_file_output);
 	suite_add_tcase(suite, custom_output);
+
+	unittests_add_suite(suite);
 }

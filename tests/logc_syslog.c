@@ -23,6 +23,9 @@
 #include "fakesyslog.h"
 #include "logc_fixtures.h"
 
+void unittests_add_suite(Suite*);
+
+
 static void syslog_setup() {
 	fakesyslog_reset();
 	setup();
@@ -43,9 +46,15 @@ START_TEST(simple_warning) {
 }
 END_TEST
 
-void logc_syslog_tests(Suite *suite) {
+
+__attribute__((constructor))
+static void suite() {
+	Suite *suite = suite_create("syslog");
+
 	TCase *tc_syslog = tcase_create("syslog");
 	tcase_add_checked_fixture(tc_syslog, syslog_setup, syslog_teardown);
 	tcase_add_test(tc_syslog, simple_warning);
 	suite_add_tcase(suite, tc_syslog);
+
+	unittests_add_suite(suite);
 }
