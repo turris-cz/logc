@@ -41,7 +41,7 @@ void log_allocate(log_t log) {
 	if (log->_log)
 		return;
 	log->_log = malloc(sizeof *log->_log);
-	*log->_log = (typeof(*log->_log)){
+	*log->_log = (struct _log){
 		.level = 0,
 		.syslog_format = NULL,
 		.outs = NULL,

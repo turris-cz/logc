@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--log-level` argp otion
 
 ### Changed
+- Code is now compiled explicitly with C11 standard support
 - Output format not-empty condition do not investigate sub-conditions, instead it
   considers them non-empty if they condition is fulfilled.
 - Default formats now use `LOG_FP_LEVEL_NAME` for message type representation

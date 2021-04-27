@@ -24,7 +24,7 @@
 #include <errno.h>
 
 void new_output_f(struct output *out, FILE *f, int level, const struct format *format, int flags) {
-	*out = (typeof(*out)){
+	*out = (struct output){
 		.f = f,
 		.fd = -1,
 		.level = level,
@@ -61,7 +61,7 @@ void free_output(struct output *out, bool close_f) {
 
 void syslog_output(struct output *out, char **str, size_t *str_len,
 		const struct format *format) {
-	*out = (typeof(*out)){
+	*out = (struct output){
 		.f = open_memstream(str, str_len),
 		.fd = -1,
 		.level = 0,
