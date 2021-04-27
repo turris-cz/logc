@@ -1,0 +1,76 @@
+= LogC Asserts programmers guide
+
+This describes usage of `logc_asserts.h`. This is extension to `logc_assert.h` and
+provides comparison for basic types available in C.
+
+
+== Inclusion
+
+To include LogC Asserts you just have to include `logc_asserts.h` preferably after
+`DEFLOG` definition.
+
+Example usage would be:
+[,C]
+----
+#include "log.h"
+#include <logc_asserts.h>
+----
+Given that `log.h` contains declaration of log and definition of `DEFLOG`.
+
+
+== Usage
+
+There are six public macros defined in this header. Their name is combination of
+`log_assert_` and two letters specifying type of comparison. The full list is as
+follows:
+
+- `log_assert_eq`
+- `log_assert_ne`
+- `log_assert_lt`
+- `log_assert_le`
+- `log_assert_gt`
+- `log_assert_ge`
+
+These functions can be called either with three or four arguments. The three
+arguments call simply specifies as first argument log and two additional arguments
+are expressions the result should be compared of. The example three argument call
+would be simply `log_assert_eq(log, a, b)`. The four argument variant adds fourth
+argument which meaning depends on type. In the general such call would look like
+`log_assert_eq(log, a, b, l)`.
+
+The supported types for three arguments variant call are:
+
+- `short`
+- `unsigned short`
+- `int`
+- `unsigned`
+- `long`
+- `unsigned long`
+- `long long`
+- `unsigned long long`
+- `float`
+- `double`
+- `long double`
+- `char`
+- `char*` (compared using `strcmp`)
+- `const char*` (compared using `strcmp`)
+
+Any format that is not listed here is threated as integer number (`long long`).
+
+The supported types for four arguments variant call are:
+
+- `char*` (compared using `strncmp` where fourth argument is string length)
+- `const char*` (compared using `strncmp` where fourth argument is string length)
+- `float` (compared with fourth argument used as precision for comparison)
+- `double` (compared with fourth argument used as precision for comparison)
+- `long double` (compared with fourth argument used as precision for comparison)
+
+Any format that is not listed here is threated as generic memory and compared
+using `memcmp` where amount of bytes compared is specified by fourth argument.
+
+The result of failed assertion is call to `critical` and thus message is printed
+and abort called.
+
+As with any other LogC header there are also variants of macros that are defined
+when also `DEFLOG` is. Names of these macros are same as but without `log_`
+prefix, thus `log_assert_eq` is `assert_eq` and so on.

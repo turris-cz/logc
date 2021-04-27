@@ -172,6 +172,7 @@ LogC provides additional optional extensions documented separately:
   arguments.
 - link:./docs/logc_assert.adoc[LogC Assert] providing standard `assert.h`
   compatibility.
+- link:./docs/logc_asserts.adoc[LogC Asserts] provides extension for LogC Assert.
 - link:./docs/logc_util.adoc[LogC Utilities] contains additional non-standard
   header only utilities.
 

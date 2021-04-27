@@ -27,6 +27,7 @@ void logc_tests(Suite*);
 void logc_formats_tests(Suite*);
 void logc_syslog_tests(Suite*);
 void logc_argp_tests(Suite*);
+void logc_asserts_tests(Suite*);
 
 
 int main(void) {
@@ -36,6 +37,7 @@ int main(void) {
 	logc_formats_tests(suite);
 	logc_syslog_tests(suite);
 	logc_argp_tests(suite);
+	logc_asserts_tests(suite);
 
 	SRunner *runner = srunner_create(suite);
 	char *test_output_tap = getenv("TEST_OUTPUT_TAP");

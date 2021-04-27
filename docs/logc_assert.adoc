@@ -1,4 +1,4 @@
-= LogC Argp programmers guide
+= LogC Assert programmers guide
 
 This describes usage of `logc_assert.h` as a replacement for `assert.h`.
 

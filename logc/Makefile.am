@@ -2,7 +2,8 @@ lib_LTLIBRARIES += liblogc.la
 include_HEADERS += \
 	include/logc.h \
 	include/logc_util.h \
-	include/logc_assert.h
+	include/logc_assert.h \
+	include/logc_asserts.h
 pkgconfig_DATA += %reldir%/logc.pc
 
 liblogc_la_SOURCES = \
