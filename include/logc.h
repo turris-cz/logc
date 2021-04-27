@@ -42,17 +42,17 @@ struct log {
 };
 typedef struct log* log_t;
 
-#define APP_LOG(NAME) \
-	struct log _log_ ## NAME = (struct log){.name = NULL, ._log = NULL, .syslog = false }; \
-	log_t log_ ## NAME = &_log_ ## NAME;
+#define APP_LOG(logname) \
+	struct log _log_ ## logname = (struct log){.name = NULL, ._log = NULL, .syslog = false }; \
+	log_t log_ ## logname = &_log_ ## logname;
 
-#define DAEMON_LOG(NAME) \
-	struct log _log_ ## NAME = (struct log){.name = NULL, ._log = NULL, .syslog = true }; \
-	log_t log_ ## NAME = &_log_ ## NAME;
+#define DAEMON_LOG(logname) \
+	struct log _log_ ## logname = (struct log){.name = NULL, ._log = NULL, .syslog = true }; \
+	log_t log_ ## logname = &_log_ ## logname;
 
-#define LOG(NAME) \
-	struct log _log_ ## NAME = (struct log){.name = #NAME, ._log = NULL, .syslog = false }; \
-	log_t log_ ## NAME = &_log_ ## NAME;
+#define LOG(logname) \
+	struct log _log_ ## logname = (struct log){.name = #logname, ._log = NULL, .syslog = false }; \
+	log_t log_ ## logname = &_log_ ## logname;
 
 void log_free(log_t) __attribute__((nonnull));
 
@@ -187,14 +187,14 @@ void _log(log_t, enum log_message_level,
 		const char *file, size_t line, const char *func,
 		const char *format, ...) __attribute__((nonnull,format(printf, 6, 7)));
 
-#define log(LOG, LEVEL, ...) _log(LOG, LEVEL, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define critical(LOG, ...) do { log(LOG, LL_CRITICAL, __VA_ARGS__); log_flush(LOG); abort(); } while (0)
-#define error(LOG, ...) log(LOG, LL_ERROR, __VA_ARGS__)
-#define warning(LOG, ...) log(LOG, LL_WARNING, __VA_ARGS__)
-#define notice(LOG, ...) log(LOG, LL_NOTICE, __VA_ARGS__)
-#define info(LOG, ...) log(LOG, LL_INFO, __VA_ARGS__)
-#define debug(LOG, ...) log(LOG, LL_DEBUG, __VA_ARGS__)
-#define trace(LOG, ...) log(LOG, LL_TRACE, __VA_ARGS__)
+#define log(logt, level, ...) _log(logt, level, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define critical(logt, ...) do { log(logt, LL_CRITICAL, __VA_ARGS__); log_flush(logt); abort(); } while (0)
+#define error(logt, ...) log(logt, LL_ERROR, __VA_ARGS__)
+#define warning(logt, ...) log(logt, LL_WARNING, __VA_ARGS__)
+#define notice(logt, ...) log(logt, LL_NOTICE, __VA_ARGS__)
+#define info(logt, ...) log(logt, LL_INFO, __VA_ARGS__)
+#define debug(logt, ...) log(logt, LL_DEBUG, __VA_ARGS__)
+#define trace(logt, ...) log(logt, LL_TRACE, __VA_ARGS__)
 
 #endif
 

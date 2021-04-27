@@ -22,7 +22,11 @@
 #define _LOGC_ASSERT_H_
 
 // Logc compatible replacement for assert.h
-#define log_assert(LOG, COND) do { if (!(COND)) CRITICAL("Assertion '%s' failed", #COND); } while (0)
+#define log_assert(log, expr) ({ \
+		if (expr); else \
+			critical(log, "Assertion '%s' failed", #expr); \
+	})
+
 
 #endif
 
@@ -30,7 +34,7 @@
 #ifndef _LOGC_ASSERT_H_DEFLOG
 #define _LOGC_ASSERT_H_DEFLOG
 
-#define assert(COND) log_assert(DEFLOG, COND)
+#define assert(expr) log_assert(DEFLOG, expr)
 
 #endif
 #endif
