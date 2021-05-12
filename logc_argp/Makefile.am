@@ -9,3 +9,5 @@ liblogc_argp_la_CFLAGS = \
 liblogc_argp_la_LDFLAGS = --version-script=%reldir%/liblogc_argp.version
 liblogc_argp_la_LIDADD = ${CODE_COVERAGE_LIBS}
 
+
+linted_files += $(liblogc_argp_la_SOURCES)

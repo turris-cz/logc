@@ -21,3 +21,6 @@ liblogc_la_LIDADD = ${CODE_COVERAGE_LIBS}
 logc_gperf = %reldir%/format.gperf.c
 $(liblogc_la_OBJECTS): $(logc_gperf)
 gperf_files += ${logc_gperf}
+
+
+linted_files += $(liblogc_la_SOURCES)
