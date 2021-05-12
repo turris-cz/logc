@@ -51,7 +51,7 @@ const char *level_name[] = {
 #define ILL(LEVEL) (LEVEL + 3)
 
 START_TEST(check_default_level) {
-	log(tlog, _i, "This is message!");
+	logc(tlog, _i, "This is message!");
 
 	fflush(stderr);
 	if (_i >= LL_NOTICE) {
@@ -68,7 +68,7 @@ END_TEST
 
 START_TEST(check_all_levels) {
 	log_set_level(tlog, LL_TRACE);
-	log(tlog, _i, "This is message!");
+	logc(tlog, _i, "This is message!");
 
 	fflush(stderr);
 	char *expected;
@@ -144,7 +144,7 @@ END_TEST
 
 START_TEST(disabled_def_output) {
 	log_stderr_fallback(tlog, false);
-	log(tlog, _i, "This is message!");
+	logc(tlog, _i, "This is message!");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "");
@@ -227,7 +227,7 @@ START_TEST(check_custom_outputs) {
 	FILE *f = open_memstream(&buf, &bufsiz);
 	log_add_output(tlog, f, 0, 0, custom_output_tests[_i].format);
 
-	_log(tlog, LL_NOTICE, "tests/logc.c", 42, "function_name", "Message");
+	_logc(tlog, LL_NOTICE, "tests/logc.c", 42, "function_name", "Message");
 
 	fclose(f);
 	// Last character is always new line so we skip it

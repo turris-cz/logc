@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--log-level` argp otion
 
 ### Changed
+- Macro `log` was renamed to `logc` to not collide with `math.h`'s `log`
+- Function `_log` was renamed to `_logc` to be consistent with `log` rename
 - Code is now compiled explicitly with C11 standard support
 - Output format not-empty condition do not investigate sub-conditions, instead it
   considers them non-empty if they condition is fulfilled.

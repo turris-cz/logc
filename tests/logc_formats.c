@@ -47,7 +47,7 @@ struct color_format_tests {
 
 START_TEST(check_color_format) {
 	log_set_level(tlog, LL_TRACE);
-	log(tlog, color_format_tests[_i].level, "foo");
+	logc(tlog, color_format_tests[_i].level, "foo");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, color_format_tests[_i].out);
@@ -74,7 +74,7 @@ struct level_name_format_tests {
 
 START_TEST(check_level_name_format) {
 	log_set_level(tlog, LL_TRACE);
-	log(tlog, level_name_format_tests[_i].level, "foo");
+	logc(tlog, level_name_format_tests[_i].level, "foo");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, level_name_format_tests[_i].out);
@@ -84,7 +84,7 @@ END_TEST
 START_TEST(check_origin_disabled_format) {
 	log_add_output(tlog, stderr, 0, LL_INFO, LOG_FP_ORIGIN " %m");
 
-	log(tlog, LL_NOTICE, "foo");
+	logc(tlog, LL_NOTICE, "foo");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "tlog: foo\n");
@@ -96,7 +96,7 @@ START_TEST(check_origin_format) {
 	log_set_use_origin(tlog, true);
 
 	unsigned line = __LINE__ + 1;
-	log(tlog, LL_NOTICE, "foo");
+	logc(tlog, LL_NOTICE, "foo");
 
 	fflush(stderr);
 	char *expected;

@@ -183,18 +183,18 @@ void log_unchain(log_t master, log_t slave) __attribute__((nonnull));
 
 
 //// Log function and helper macros //////////////////////////////////////////////
-void _log(log_t, enum log_message_level,
+void _logc(log_t, enum log_message_level,
 		const char *file, size_t line, const char *func,
 		const char *format, ...) __attribute__((nonnull,format(printf, 6, 7)));
 
-#define log(logt, level, ...) _log(logt, level, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define critical(logt, ...) do { log(logt, LL_CRITICAL, __VA_ARGS__); log_flush(logt); abort(); } while (0)
-#define error(logt, ...) log(logt, LL_ERROR, __VA_ARGS__)
-#define warning(logt, ...) log(logt, LL_WARNING, __VA_ARGS__)
-#define notice(logt, ...) log(logt, LL_NOTICE, __VA_ARGS__)
-#define info(logt, ...) log(logt, LL_INFO, __VA_ARGS__)
-#define debug(logt, ...) log(logt, LL_DEBUG, __VA_ARGS__)
-#define trace(logt, ...) log(logt, LL_TRACE, __VA_ARGS__)
+#define logc(logt, level, ...) _logc(logt, level, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define critical(logt, ...) do { logc(logt, LL_CRITICAL, __VA_ARGS__); log_flush(logt); abort(); } while (0)
+#define error(logt, ...) logc(logt, LL_ERROR, __VA_ARGS__)
+#define warning(logt, ...) logc(logt, LL_WARNING, __VA_ARGS__)
+#define notice(logt, ...) logc(logt, LL_NOTICE, __VA_ARGS__)
+#define info(logt, ...) logc(logt, LL_INFO, __VA_ARGS__)
+#define debug(logt, ...) logc(logt, LL_DEBUG, __VA_ARGS__)
+#define trace(logt, ...) logc(logt, LL_TRACE, __VA_ARGS__)
 
 #endif
 

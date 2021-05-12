@@ -225,7 +225,7 @@ void do_log(const struct output *out, enum log_message_level msg_level,
 	fflush(out->f);
 }
 
-void _log(log_t log, enum log_message_level msg_level,
+void _logc(log_t log, enum log_message_level msg_level,
 		const char *file, size_t line, const char *func,
 		const char *msgformat, ...) {
 	int stderrno = errno;
