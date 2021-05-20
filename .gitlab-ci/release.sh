@@ -13,5 +13,5 @@ done
 release-cli create \
 	--name "Release ${CI_COMMIT_TAG#v}" \
 	--tag-name "$CI_COMMIT_TAG" \
-	--description "$(sed -n '/^## /,/^## /{n;/^## /q;p}' CHANGELOG.md)" \
+	--description "$(sed -n '/^## /,/^## /p' CHANGELOG.md | sed '1d;$d')" \
 	"${args[@]}"
