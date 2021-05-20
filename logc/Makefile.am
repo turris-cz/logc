@@ -15,7 +15,9 @@ liblogc_la_SOURCES = \
 liblogc_la_CFLAGS = \
 	-isystem %reldir%/../include \
 	${CODE_COVERAGE_CFLAGS}
-liblogc_la_LDFLAGS = --version-script=%reldir%/liblogc.version
+liblogc_la_LDFLAGS = \
+	-Wl,--version-script=%reldir%/liblogc.version \
+	-version-info 0:0:0
 liblogc_la_LIDADD = ${CODE_COVERAGE_LIBS}
 
 logc_gperf = %reldir%/format.gperf.c
