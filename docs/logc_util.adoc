@@ -21,19 +21,19 @@ program once such function is actually used in code. The better approach would b
 to for example call `abort` in such function to terminate execution and thus
 preventing the unexpected behavior. And ideal option is to also report exact
 location of issue and what is actually missing. The ideal solution in LogC is
-implemented simply using `NOT_IMPLEMENTED` macro.
+implemented simply using `not_implemented` macro.
 
 Usage of `not_implemented` would be:
 [,C]
 ----
 void foo(int fee) {
-	NOT_IMPLEMENTED;
+	not_implemented;
 }
 ----
 On `foo` invocation you would get critical message `foo not implemented yet` and
 `abort` would be called.
 
-There is also `not_implemented(LOG)` macro. It serves the same purpose but allows
+There is also `log_not_implemented(LOG)` macro. It serves the same purpose but allows
 log specification. It can be used when `DEFLOG` is not defined or anytime you do
 not want to use default log.
 
@@ -73,15 +73,15 @@ error. In terms of code complexity adding `if` statement is probably out of
 question. At the same time it can be that error should not be really ignored in
 some cases or that error can be used to deduce state of program. Just ignoring it
 always is not as good idea considering possible faults in judgement. Because of
-that LogC provides utility macro `STD_IGNORE`. This simply prints message with
+that LogC provides utility macro `std_ignore`. This simply prints message with
 trace severity saying for example `Ignored fail of 'unlink(path)'` in case of
 failure in:
 [,C]
 ----
-STD_IGNORE(unlink(path));
+std_ignore(unlink(path));
 ----
 
-There is also `std_ignore` macro. It serves the same purpose but it allows log
+There is also `log_std_ignore` macro. It serves the same purpose but it allows log
 specification. It can be used when `DEFLOG` is not defined or anytime you do not
 want to use default log.
 
@@ -93,16 +93,16 @@ that it exists.
 
 It is clear that in most cases error is not handled simply for code simplicity.
 Unfortunately at the same time that allows possibly hard to debug issues in some
-circumstances. To prevent this LogC provides utility macro `STD_FATAL`. This
+circumstances. To prevent this LogC provides utility macro `std_fatal`. This
 simply prints `Unexpected fail of 'chown(new_path, uid, gid)'` when our example
 `chown` function reports failure.
 [,C]
 ----
 if (link(path, new_path) == 0) {
-  STD_FATAL(chown(new_path, uid, gid));
+  std_fatal(chown(new_path, uid, gid));
 }
 ----
 
-There is also `std_fatal` macro. It serves the same purpose but it allows log
+There is also `log_std_fatal` macro. It serves the same purpose but it allows log
 specification. It can be used when `DEFLOG` is not defined or anytime you do not
 want to use default log.

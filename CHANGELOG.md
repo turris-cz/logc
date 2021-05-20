@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--log-level` argp otion
 
 ### Changed
+- Log macros for specific log prefixed with `log_`
+- Log macros using `DEFLOG` renamed from upper-case to lower-case
 - Macro `log` was renamed to `logc` to not collide with `math.h`'s `log`
 - Function `_log` was renamed to `_logc` to be consistent with `log` rename
 - Code is now compiled explicitly with C11 standard support

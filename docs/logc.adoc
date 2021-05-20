@@ -78,36 +78,40 @@ Now, let's focus on the logs creation itself. Doing that is in the end as easy
 as using one of the following macros:
 [,C]
 ----
-critical(LOG, ...)
-error(LOG, ...)
-warning(LOG, ...)
-notice(LOG, ...)
-info(LOG, ...)
-debug(LOG, ...)
-trace(LOG, ...)
+log_critical(LOG, ...)
+log_error(LOG, ...)
+log_warning(LOG, ...)
+log_notice(LOG, ...)
+log_info(LOG, ...)
+log_debug(LOG, ...)
+log_trace(LOG, ...)
 ----
 
 Suggestion on how to choose correct one can be found in
 file:../README.adoc[readme]. All of these macros accept as first argument `log_t`
 instance (pointer to `struct log`) and other arguments are same as for `printf`.
 As an example to print warning containing number you can do
-`warning(log_foo, "Foo: %d", foo)`. Where `log_foo` would be created in *log definition*
-section e.g. using `APP_LOG(foo)`.
+`log_warning(log_foo, "Foo: %d", foo)`. Where `log_foo` would be created in *log
+definition* section e.g. using `APP_LOG(foo)`.
 
-Macro `critical(LOG, ...)` not only logs message but also calls `abort()`! Use
+Macro `log_critical(LOG, ...)` not only logs message but also calls `abort()`! Use
 this to handle critical errors causing application exit. Note that you can hook
 your termination routine on abort to cleanup after yourself.
 
-There are also simpler variants of these macros. They have same name but in
-capital letters. To get access to them you have to define macro `DEFLOG` before
-`logc.h` inclusion. Such inclusion including log definition would be:
+There are also simpler variants of these macros. They are named without `log_`
+prefix. To get access to them you have to define macro `DEFLOG` before `logc.h`
+inclusion. Such inclusion including log definition would be:
 [,C]
 ----
 #define DEFLOG log_foo
 #include <logc.h>
 LOG(foo);
 ----
-Example of usage later on would be `WARNING("Foo: %d", foo);`.
+Example of usage later on would be `warning("Foo: %d", foo);`.
+
+[WARNING]
+  Abort is called directly from `log_critical` macro and thus just logging
+  critical message using `logc` won't result in abort.
 
 
 == `errno` management

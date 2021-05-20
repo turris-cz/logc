@@ -36,10 +36,3 @@ to be log instance.
 ----
 log_assert(log_foo, foo == 0);
 ----
-
-[NOTE]
-  Notice that compared to `logc.h` macros defined when `DEFLOG` is provided are
-  not with capital letter but rather name of variant that allows log specification
-  just has different name. The reason is to make this really drop in replacement
-  for `assert.h`. We have to implement assert consistent with prototype `void
-  assert(scalar expression)`. That makes it unfortunately inconsistent.

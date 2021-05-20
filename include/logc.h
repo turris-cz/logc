@@ -188,13 +188,13 @@ void _logc(log_t, enum log_message_level,
 		const char *format, ...) __attribute__((nonnull,format(printf, 6, 7)));
 
 #define logc(logt, level, ...) _logc(logt, level, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define critical(logt, ...) do { logc(logt, LL_CRITICAL, __VA_ARGS__); log_flush(logt); abort(); } while (0)
-#define error(logt, ...) logc(logt, LL_ERROR, __VA_ARGS__)
-#define warning(logt, ...) logc(logt, LL_WARNING, __VA_ARGS__)
-#define notice(logt, ...) logc(logt, LL_NOTICE, __VA_ARGS__)
-#define info(logt, ...) logc(logt, LL_INFO, __VA_ARGS__)
-#define debug(logt, ...) logc(logt, LL_DEBUG, __VA_ARGS__)
-#define trace(logt, ...) logc(logt, LL_TRACE, __VA_ARGS__)
+#define log_critical(logt, ...) do { logc(logt, LL_CRITICAL, __VA_ARGS__); log_flush(logt); abort(); } while (0)
+#define log_error(logt, ...) logc(logt, LL_ERROR, __VA_ARGS__)
+#define log_warning(logt, ...) logc(logt, LL_WARNING, __VA_ARGS__)
+#define log_notice(logt, ...) logc(logt, LL_NOTICE, __VA_ARGS__)
+#define log_info(logt, ...) logc(logt, LL_INFO, __VA_ARGS__)
+#define log_debug(logt, ...) logc(logt, LL_DEBUG, __VA_ARGS__)
+#define log_trace(logt, ...) logc(logt, LL_TRACE, __VA_ARGS__)
 
 #endif
 
@@ -203,13 +203,13 @@ void _logc(log_t, enum log_message_level,
 #ifndef _LOGC_H_DEFLOG
 #define _LOGC_H_DEFLOG
 
-#define CRITICAL(...) critical(DEFLOG, __VA_ARGS__)
-#define ERROR(...) error(DEFLOG, __VA_ARGS__)
-#define WARNING(...) warning(DEFLOG, __VA_ARGS__)
-#define NOTICE(...) notice(DEFLOG, __VA_ARGS__)
-#define INFO(...) info(DEFLOG, __VA_ARGS__)
-#define DEBUG(...) debug(DEFLOG, __VA_ARGS__)
-#define TRACE(...) trace(DEFLOG, __VA_ARGS__)
+#define critical(...) log_critical(DEFLOG, __VA_ARGS__)
+#define error(...) log_error(DEFLOG, __VA_ARGS__)
+#define warning(...) log_warning(DEFLOG, __VA_ARGS__)
+#define notice(...) log_notice(DEFLOG, __VA_ARGS__)
+#define info(...) log_info(DEFLOG, __VA_ARGS__)
+#define debug(...) log_debug(DEFLOG, __VA_ARGS__)
+#define trace(...) log_trace(DEFLOG, __VA_ARGS__)
 
 #endif
 #endif

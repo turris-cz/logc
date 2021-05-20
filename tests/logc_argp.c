@@ -119,7 +119,7 @@ START_TEST(argp_log_file) {
 	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, 3,
 		(char*[]){"t", "--log-file", tmpfile_path}, 0, NULL, NULL));
 
-	warning(logc_argp_log, "foo");
+	log_warning(logc_argp_log, "foo");
 	log_flush(logc_argp_log);
 
 	FILE *f = fopen(tmpfile_path, "r");
@@ -141,7 +141,7 @@ START_TEST(argp_syslog) {
 	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, 2,
 		(char*[]){"t", "--syslog"}, 0, NULL, NULL));
 
-	warning(logc_argp_log, "foo");
+	log_warning(logc_argp_log, "foo");
 
 	ck_assert_int_eq(1, fakesyslog_cnt);
 	ck_assert_str_eq("WARNING:tlog: foo\n", fakesyslog[0].msg);

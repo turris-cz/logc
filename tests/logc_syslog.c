@@ -40,7 +40,7 @@ static void syslog_teardown() {
 }
 
 START_TEST(simple_warning) {
-	WARNING("This is warning!");
+	warning("This is warning!");
 	ck_assert_int_eq(1, fakesyslog_cnt);
 	ck_assert_str_eq("WARNING:tlog: This is warning!\n", fakesyslog[0].msg);
 }

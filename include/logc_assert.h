@@ -24,7 +24,7 @@
 // Logc compatible replacement for assert.h
 #define log_assert(log, expr) ({ \
 		if (expr); else \
-			critical(log, "Assertion '%s' failed", #expr); \
+			log_critical(log, "Assertion '%s' failed", #expr); \
 	})
 
 

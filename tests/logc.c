@@ -28,7 +28,7 @@ void unittests_add_suite(Suite*);
 
 
 START_TEST(simple_warning) {
-	WARNING("This is warning!");
+	warning("This is warning!");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "WARNING:tlog: This is warning!\n");
@@ -85,7 +85,7 @@ END_TEST
 
 START_TEST(app_log) {
 	APP_LOG(tlog);
-	error(log_tlog, "This is error!");
+	log_error(log_tlog, "This is error!");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "ERROR: This is error!\n");
@@ -96,7 +96,7 @@ END_TEST
 
 START_TEST(standard_error) {
 	errno = ENOENT;
-	ERROR("This is error");
+	error("This is error");
 	ck_assert_int_eq(errno, 0); // call should reset errno
 
 	fflush(stderr);
@@ -116,8 +116,8 @@ START_TEST(call_verbose) {
 
 	ck_assert_int_eq(log_level(tlog), LL_DEBUG);
 
-	DEBUG("This is debug!");
-	TRACE("This is trace!"); // should not print
+	debug("This is debug!");
+	trace("This is trace!"); // should not print
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "DEBUG:tlog: This is debug!\n");
@@ -132,8 +132,8 @@ START_TEST(call_quiet) {
 
 	ck_assert_int_eq(log_level(tlog), LL_ERROR);
 
-	ERROR("This is error!");
-	WARNING("This is warning!"); // should not print
+	error("This is error!");
+	warning("This is warning!"); // should not print
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "ERROR:tlog: This is error!\n");
@@ -159,7 +159,7 @@ START_TEST(message_origin) {
 	ck_assert(log_use_origin(tlog));
 
 	const int line = __LINE__ + 1;
-	NOTICE("foo");
+	notice("foo");
 
 	fflush(stderr);
 	char *expected;
@@ -259,7 +259,7 @@ START_TEST(check_custom_outputs_flags) {
 	FILE *f = open_memstream(&buf, &bufsiz);
 	log_add_output(tlog, f, custom_output_flag_tests[_i].flags, 0, custom_output_flag_tests[_i].format);
 
-	NOTICE("Message");
+	notice("Message");
 
 	fclose(f);
 	// Last character is always new line so we skip it
@@ -277,14 +277,14 @@ START_TEST(check_custom_output_remove) {
 	FILE *f = open_memstream(&buf, &bufsiz);
 
 	log_add_output(tlog, f, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_PLAIN);
-	NOTICE("output");
+	notice("output");
 	ck_assert(log_rm_output(tlog, f));
 	// No need to flush here as f is closed on log_rm_output and so flushed
 	ck_assert_str_eq(buf, "tlog: output\n");
 	free(buf);
 
 	// Test default output as well to verify that we stopped using custom one
-	NOTICE("stderr");
+	notice("stderr");
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "NOTICE:tlog: stderr\n");
 
@@ -298,12 +298,12 @@ START_TEST(check_custom_output_twice) {
 	FILE *f = open_memstream(&buf, &bufsiz);
 
 	log_add_output(tlog, f, 0, 0, LOG_FORMAT_PLAIN);
-	NOTICE("plain");
+	notice("plain");
 	fflush(f);
 	ck_assert_str_eq(buf, "tlog: plain\n");
 
 	log_add_output(tlog, f, 0, 0, LOG_FORMAT_DEFAULT);
-	NOTICE("default");
+	notice("default");
 	fflush(f);
 	ck_assert_str_eq(buf, "tlog: plain\nNOTICE:tlog: default\n");
 
@@ -323,7 +323,7 @@ START_TEST(check_custom_output_wipe) {
 	log_add_output(tlog, f1, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_PLAIN);
 	log_add_output(tlog, f2, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_PLAIN);
 
-	NOTICE("Message");
+	notice("Message");
 
 	log_wipe_outputs(tlog);
 	fflush(stderr);
@@ -334,7 +334,7 @@ START_TEST(check_custom_output_wipe) {
 	free(buf1);
 	free(buf2);
 
-	NOTICE("Message");
+	notice("Message");
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "NOTICE:tlog: Message\n");
 
@@ -348,7 +348,7 @@ START_TEST(check_custom_file_output) {
 	FILE *f = tmpfile();
 
 	log_add_output(tlog, f, 0, 0, LOG_FORMAT_PLAIN);
-	NOTICE("Message");
+	notice("Message");
 	log_wipe_outputs(tlog);
 
 	char *line = NULL;

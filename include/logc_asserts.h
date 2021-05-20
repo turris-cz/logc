@@ -149,7 +149,7 @@ __cmp_functions__(__cmp_mem);
 				" "__logc_equote(__logc_concat(__log_assert_cmp_op_, cond))" ", \
 				__log_assert_cmp_type(b) \
 			) \
-			critical(log, __format, #a, #b, _cmp_a, _cmp_b); \
+			log_critical(log, __format, #a, #b, _cmp_a, _cmp_b); \
 		} \
 	})
 #define _log_assert_cmp_l(log, cond, a, b, l) ({ \
@@ -163,9 +163,9 @@ __cmp_functions__(__cmp_mem);
 				__log_assert_cmp_type_l(b, l) \
 			) \
 			if (__log_assert_cmp_arg_l(a)) \
-				critical(log, __format, #a, #b, (int)_cmp_l, _cmp_a, (int)_cmp_l, _cmp_b); \
+				log_critical(log, __format, #a, #b, (int)_cmp_l, _cmp_a, (int)_cmp_l, _cmp_b); \
 			else \
-				critical(log, __format, #a, #b, _cmp_a, _cmp_b); \
+				log_critical(log, __format, #a, #b, _cmp_a, _cmp_b); \
 		} \
 	})
 #define __logc_assert_cmp_select(_1, _2, _3, _4, _5, X, ...) X
