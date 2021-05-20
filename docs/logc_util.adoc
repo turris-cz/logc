@@ -106,3 +106,19 @@ if (link(path, new_path) == 0) {
 There is also `log_std_fatal` macro. It serves the same purpose but it allows log
 specification. It can be used when `DEFLOG` is not defined or anytime you do not
 want to use default log.
+
+
+== Standard library `NULL` error return
+
+There is one more type of error reporting used in standard C library as well as in
+POSIX and that is return of pointer or `NULL` in case of an error. These are
+functions such as `malloc` or `strdup`.
+
+There is no LogC utility to handle these. The reason is because in pretty much all
+cases you need return value to work with it later.
+
+You can use plain `assert` for unexpected failures.
+
+For these functions there just can't be anything as allowed failure as they in
+general return pointer to memory. The ignored failure can later trigger
+segmentation fail.
