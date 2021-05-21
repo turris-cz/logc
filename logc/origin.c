@@ -23,7 +23,7 @@
 #define ENV_LOG_ORIGIN "LOG_ORIGIN"
 
 static bool log_origin_from_env() {
-	static bool log_origin = false;
+	static bool log_origin = DEF_USE_ORIGIN;
 	static bool loaded = false;
 	if (!loaded)
 		log_origin = !str_empty(getenv(ENV_LOG_ORIGIN));

@@ -37,6 +37,11 @@ struct _log {
 	bool use_origin;
 };
 
+#define DEF_LEVEL 0
+#define DEF_NO_STDERR false
+#define DEF_USE_ORIGIN false
+extern const struct _log _log_default;
+
 void log_allocate(log_t log);
 
 #endif

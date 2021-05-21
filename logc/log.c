@@ -33,6 +33,15 @@
 
 LOG(logc_internal)
 
+const struct _log _log_default = {
+	.level = DEF_LEVEL,
+	.syslog_format = NULL,
+	.outs = NULL,
+	.outs_cnt = 0,
+	.no_stderr = DEF_NO_STDERR,
+	.use_origin = DEF_USE_ORIGIN,
+};
+
 static inline enum log_message_level message_level_sanity(int l) {
 	return l > LL_CRITICAL ? LL_CRITICAL : l < LL_TRACE ? LL_TRACE : l;
 }
@@ -41,14 +50,7 @@ void log_allocate(log_t log) {
 	if (log->_log)
 		return;
 	log->_log = malloc(sizeof *log->_log);
-	*log->_log = (struct _log){
-		.level = 0,
-		.syslog_format = NULL,
-		.outs = NULL,
-		.outs_cnt = 0,
-		.no_stderr = false,
-		.use_origin = false,
-	};
+	*log->_log = _log_default;
 }
 
 void log_free(log_t log) {

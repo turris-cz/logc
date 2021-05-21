@@ -42,7 +42,8 @@ bool verbose_filter(enum log_message_level msg_level, log_t log, const struct ou
 }
 
 int log_level(log_t log) {
-	log_allocate(log);
+	if (log->_log == NULL)
+		return DEF_LEVEL;
 	return log->_log->level;
 }
 
