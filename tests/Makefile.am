@@ -7,17 +7,20 @@ check_PROGRAMS = %reldir%/unittests
 	%reldir%/logc_fixtures.h \
 	%reldir%/logc_fixtures.c \
 	%reldir%/logc.c \
+	%reldir%/logc_bind.c \
 	%reldir%/logc_argp.c \
 	%reldir%/logc_asserts.c \
 	%reldir%/logc_formats.c \
 	%reldir%/logc_syslog.c
 %canon_reldir%_unittests_CFLAGS = \
 	-isystem '$(srcdir)/include' \
-	$(CHECK_FLAGS)
+	$(CHECK_FLAGS) \
+	${CODE_COVERAGE_CFLAGS}
 %canon_reldir%_unittests_LDADD = \
 	$(builddir)/liblogc.la \
 	$(builddir)/liblogc_argp.la \
 	$(CHECK_LIBS) \
+	${CODE_COVERAGE_LIBS} \
 	%reldir%/libfakesyslog.la
 
 lib_LTLIBRARIES += %reldir%/libfakesyslog.la

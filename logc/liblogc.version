@@ -18,6 +18,10 @@ V0.0 {
 		log_stderr_fallback;
 		log_flush;
 
+		log_bind;
+		log_bound;
+		log_unbind;
+
 		_logc;
 
 	local: *;

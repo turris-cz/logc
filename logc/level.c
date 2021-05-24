@@ -33,8 +33,8 @@ static int log_level_from_env() {
 	return level;
 }
 
-bool verbose_filter(enum log_message_level msg_level, log_t log, const struct output *out) {
-	return msg_level - 
+bool verbose_filter(int level, log_t log, const struct output *out) {
+	return level - 
 		(log->_log ? log->_log->level : 0) -
 		(out ? out->level : 0) -
 		log_level_from_env()

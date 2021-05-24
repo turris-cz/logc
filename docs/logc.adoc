@@ -362,6 +362,45 @@ The `format` here is string with same fields as described in custom output
 section.
 
 
-== Logs chaining
+== Logs binding
 
-This feature is not implemented yet.
+LogC is intended to be used with multiple log handles. There would be one
+application log and multiple general purpose logs. The log configuration is
+expected to be  performed on application log. The logs binding ties general
+purpose logs to application log and that way there is central point where user
+configures logging trough. In reality it is not necessary that binding happens to
+the application log. Any log can be bound to any other (although only one bind is
+possible). That allows building effectively trees of bound logs.
+
+Bound log ignores its own configuration for outputs. That means that any custom
+log or syslog enable in bound log are not considered. Instead bound log uses
+output configuration of the log it is bound to. This propagates up to the log that
+is not bound. In effect any bound log uses outputs of top level unbound one.
+
+Verbosity setting of bound logs has modified meaning. It is rather modification
+against verbosity of log it is bound to. The effective verbosity level is sum of
+all verbosity levels trough chain of all bounded logs including the top-level
+unbound one.
+
+To bind log to some other the function `log_bind` has to be used.
+[,C]
+----
+log_bind(log_dominant_foo, log_foo);
+----
+This function can be called any time after to replace dominant (the one log is
+bound to) log.
+
+To remove bind you can also call simply `log_unbind`.
+[,C]
+----
+log_unbind(log_foo);
+----
+
+Lastly but not least there is function to query if log is bound to some log and
+which one.
+[,C]
+----
+log_t log_dominant_foo2 = log_bound(log_foo);
+----
+This function returns `NULL` when log is not bound to any other log and pointer to
+the dominant log otherwise.

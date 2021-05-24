@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/) *
+/* Copyright (c) 2021 CZ.NIC z.s.p.o. (http://www.nic.cz/) *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -35,6 +35,7 @@ LOG(logc_internal)
 
 const struct _log _log_default = {
 	.level = DEF_LEVEL,
+	.dominator = NULL,
 	.syslog_format = NULL,
 	.outs = NULL,
 	.outs_cnt = 0,
@@ -64,13 +65,17 @@ void log_free(log_t log) {
 }
 
 bool log_would_log(log_t log, enum log_message_level msg_level) {
-	if (log->_log && log->_log->outs) {
-		for (size_t i = 0; i < log->_log->outs_cnt; i++)
-			if (verbose_filter(msg_level, log, &log->_log->outs[i]))
-				return true;
-		return false;
-	} else
-		return verbose_filter(msg_level, log, NULL);
+	if (log->_log) {
+		if (log->_log->dominator)
+			return log_would_log(log->_log->dominator, msg_level + log->_log->level);
+		if (log->_log->outs) {
+			for (size_t i = 0; i < log->_log->outs_cnt; i++)
+				if (verbose_filter(msg_level, log, &log->_log->outs[i]))
+					return true;
+			return false;
+		}
+	}
+	return verbose_filter(msg_level, log, NULL);
 }
 
 static const struct format *if_seek_forward(const struct format *format,
@@ -174,7 +179,7 @@ static const struct format *else_seek_forward(const struct format *format) {
 	return NULL;
 }
 
-void do_log(const struct output *out, enum log_message_level msg_level,
+static void do_log(const struct output *out, enum log_message_level msg_level,
 		const char *log_name, const char *file, size_t line, const char *func,
 		bool use_origin, bool msg_empty, int stderrno,
 		const char *msgformat, va_list args) {
@@ -231,7 +236,14 @@ void _logc(log_t log, enum log_message_level msg_level,
 		const char *file, size_t line, const char *func,
 		const char *msgformat, ...) {
 	int stderrno = errno;
-	msg_level = message_level_sanity(msg_level);
+	int level = msg_level = message_level_sanity(msg_level);
+	const char *name = log->name;
+
+	// Traverse to top level dominator
+	while (log->_log && log->_log->dominator) {
+		level -= log->_log->level;
+		log = log->_log->dominator;
+	}
 
 	// This works with expectation that although there can be as many error as
 	// trace messages in the code the trace messages are likely called while error
@@ -240,7 +252,7 @@ void _logc(log_t log, enum log_message_level msg_level,
 	// without debug output so it should be in most cases more optimal to check if
 	// it makes even sense to continue.
 	// TODO we could calculate common level when we set verbosity and just compare
-	if (msg_level < LL_INFO && !log_would_log(log, msg_level))
+	if (level < LL_INFO && !log_would_log(log, level))
 		return;
 
 	size_t cnt = 1;
@@ -258,29 +270,27 @@ void _logc(log_t log, enum log_message_level msg_level,
 	va_start(args, msgformat);
 	bool msg_empty = vsnprintf(NULL, 0, msgformat, args) == 0;
 	va_end(args);
-	va_start(args, msgformat);
-	vfprintf(stdout, "", args);
-	va_end(args);
 
 #define DO_LOG(OUT) { \
 		va_start(args, msgformat); \
-		do_log(&OUT, msg_level, log->name, file, line, func, use_origin, msg_empty, stderrno, msgformat, args); \
+		do_log(&OUT, msg_level, name, file, line, func, use_origin, msg_empty, stderrno, msgformat, args); \
 		va_end(args); \
 	}
 
 	for (size_t i = 0; i < cnt; i++) {
-		if (!verbose_filter(msg_level, log, &outs[i]))
+		if (!verbose_filter(level, log, &outs[i]))
 			continue;
 		lock_output(&outs[i]);
 		DO_LOG(outs[i]);
 		unlock_output(&outs[i]);
 	}
 
-	if (log->syslog && verbose_filter(msg_level, log, NULL)) {
+	if (log->syslog && verbose_filter(level, log, NULL)) {
 		struct output out;
 		char *str;
 		size_t str_len;
-		syslog_output(&out, &str, &str_len, log->_log->syslog_format);
+		syslog_output(&out, &str, &str_len,
+				log->_log ? log->_log->syslog_format : NULL);
 		DO_LOG(out);
 		free_syslog_output(&out);
 		syslog(msg2syslog_level(msg_level), "%s", str);

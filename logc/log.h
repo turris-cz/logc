@@ -30,6 +30,7 @@ extern log_t log_logc_internal;
 
 struct _log {
 	int level;
+	struct log *dominator;
 	struct format *syslog_format;
 	struct output *outs;
 	size_t outs_cnt;

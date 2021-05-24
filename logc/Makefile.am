@@ -8,6 +8,7 @@ include_HEADERS += \
 	include/logc_assert.h \
 	include/logc_asserts.h
 liblogc_la_SOURCES = \
+	%reldir%/bind.c \
 	%reldir%/log.h \
 	%reldir%/log.c \
 	%reldir%/level.h \

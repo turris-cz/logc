@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/)
+/* Copyright (c) 2020-2021 CZ.NIC z.s.p.o. (http://www.nic.cz/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -18,6 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#include <check.h>
 #include <errno.h>
 #include "logc_fixtures.h"
 
@@ -35,6 +36,7 @@ void setup() {
 }
 
 void teardown() {
+	ck_assert_int_eq(errno, 0);
 	log_free(tlog);
 	free(tlog);
 	fclose(stderr);

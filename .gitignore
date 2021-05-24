@@ -19,6 +19,7 @@ tests/*.trs
 
 # Coverage output
 *.gcno
+*.gcda
 /logc-*-coverage*
 
 ## Autotools

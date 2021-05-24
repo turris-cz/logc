@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/)
+/* Copyright (c) 2020-2021 CZ.NIC z.s.p.o. (http://www.nic.cz/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -171,15 +171,26 @@ void log_syslog_format(log_t, const char *format) __attribute__((nonnull));
 void log_flush(log_t) __attribute__((nonnull));
 
 
-//// Chaining ////////////////////////////////////////////////////////////////////
-// This chains slave log to master one. This makes it so all configuration set to
-// master is also applied to slave. Note that this effectively makes all settings
-// same with exception of log slave name. This is handy when various logs are used
-// across application such as for example in external library.
-void log_chain(log_t master, log_t slave) __attribute__((nonnull));
-// Reverse process of log_chain. This splits slave from master but slave is
-// still going to keep all of its 
-void log_unchain(log_t master, log_t slave) __attribute__((nonnull));
+//// Binding /////////////////////////////////////////////////////////////////////
+// This binds one log to the other. Binded log can be used as usual but it outputs
+// only trough dominant one. This means that it ignores its own outputs and uses
+// output of most dominant log in the chain.
+// The binded log ignores its own outputs but it uses its level. Level is added to
+// the level of the dominant log. This way it is possible to decrease verbosity of
+// client libraries while allowing users to seem them when high enough verbosity
+// is used.	It is not in general good idea to use huge numbers. It is also
+// beneficial to never hide criticals so you should never shift priority more than
+// LL_CRITICAL.
+// The common usage for this is to join multiple logs from libraries with
+// application log.
+void log_bind(log_t dominant, log_t submissive) __attribute__((nonnull(2)));
+
+// Provides access to current log's dominator. It returns either NULL when log is
+// not binded or pointer to dominant log.
+log_t log_bound(log_t) __attribute__((nonnull));
+
+// Reverse process of log_bind. This releases submissive log from dominant one.
+void log_unbind(log_t) __attribute__((nonnull));
 
 
 //// Log function and helper macros //////////////////////////////////////////////
