@@ -20,8 +20,8 @@ AX_APPEND_FLAG([-std=c11])
 
 AM_CONDITIONAL([GPERF_GENERATE], [test -f bootstrap])
 AC_CHECK_FILE([bootstrap],[
-       AC_PATH_PROG([GPERF], [gperf])
-       AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
+  AC_PATH_PROG([GPERF], [gperf])
+  AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
 ])
 
 
