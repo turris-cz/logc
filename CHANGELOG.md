@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - distribute archives
 - code coverage generation library inclusion
 
-## Changed
+### Changed
 - Missing `cppcheck` is not fatal error if linters are enabled
 
 ## [0.2.0] - 2021-05-24
