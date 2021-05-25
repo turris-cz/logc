@@ -55,6 +55,11 @@ check:
   script:
     - make check
 
+distcheck:
+  extends: .test-check
+  script:
+    - make distcheck
+
 valgrind:
   extends: .test-check
   script:
