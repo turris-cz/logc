@@ -39,6 +39,7 @@ AC_ARG_ENABLE([linters], AC_HELP_STRING([--enable-linters], [Whether to enable c
 AM_CONDITIONAL([ENABLE_LINTERS], [test "x$enable_linters" = "xyes"])
 AS_IF([test "x$enable_linters" = "xyes"], [
   AC_PATH_PROG([CPPCHECK], [cppcheck])
+  AS_IF([test -z "$CPPCHECK" ], AC_MSG_ERROR([Missing linter cppcheck]))
 ])
 
 dnl Coverage
