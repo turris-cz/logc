@@ -18,11 +18,11 @@ PKG_INSTALLDIR
 AX_CHECK_COMPILE_FLAG([-std=c11], , AC_MSG_ERROR([Compiler with C11 standard support is required]))
 AX_APPEND_FLAG([-std=c11])
 
-AM_CONDITIONAL([GPERF_GENERATE], [test -f bootstrap])
-AC_CHECK_FILE([bootstrap],[
+AC_CHECK_FILE([${0%/*}/bootstrap],[
   AC_PATH_PROG([GPERF], [gperf])
   AS_IF([test -z "$GPERF"], [AC_MSG_ERROR([Missing gperf generator])])
 ])
+AM_CONDITIONAL([GPERF_GENERATE], [test -n "$GPERF"])
 
 
 dnl Tests
