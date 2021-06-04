@@ -32,8 +32,6 @@ START_TEST(simple_warning) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "WARNING:tlog: This is warning!\n");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -61,8 +59,6 @@ START_TEST(check_default_level) {
 		free(expected);
 	} else
 		ck_assert_str_eq(stderr_data, "");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -76,8 +72,6 @@ START_TEST(check_all_levels) {
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -89,8 +83,6 @@ START_TEST(app_log) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "ERROR: This is error!\n");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -105,8 +97,6 @@ START_TEST(standard_error) {
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -121,8 +111,6 @@ START_TEST(call_verbose) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "DEBUG:tlog: This is debug!\n");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -137,8 +125,13 @@ START_TEST(call_quiet) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "ERROR:tlog: This is error!\n");
+}
+END_TEST
 
-	ck_assert_int_eq(errno, 0);
+START_TEST(call_offset_level) {
+	log_offset_level(tlog, -2);
+
+	ck_assert_int_eq(log_level(tlog), LL_DEBUG);
 }
 END_TEST
 
@@ -148,8 +141,6 @@ START_TEST(disabled_def_output) {
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -167,8 +158,6 @@ START_TEST(message_origin) {
 	ck_assert_str_eq(stderr_data, expected);
 	ck_assert_int_eq(stderr_len, len);
 	free(expected);
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -177,8 +166,6 @@ START_TEST(check_would_log) {
 
 	for (enum log_message_level level = LL_TRACE; level < LL_CRITICAL; level++)
 		ck_assert(log_would_log(tlog, level) == (level >= _i));
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -267,7 +254,6 @@ START_TEST(check_custom_outputs_flags) {
 	free(buf);
 
 	ck_assert_int_eq(stderr_len, 0); // No output to stderr
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -287,8 +273,6 @@ START_TEST(check_custom_output_remove) {
 	notice("stderr");
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "NOTICE:tlog: stderr\n");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -309,8 +293,6 @@ START_TEST(check_custom_output_twice) {
 
 	fclose(f);
 	free(buf);
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -337,8 +319,6 @@ START_TEST(check_custom_output_wipe) {
 	notice("Message");
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "NOTICE:tlog: Message\n");
-
-	ck_assert_int_eq(errno, 0);
 }
 END_TEST
 
@@ -376,6 +356,7 @@ static void suite() {
 	tcase_add_test(def_output, standard_error);
 	tcase_add_test(def_output, call_verbose);
 	tcase_add_test(def_output, call_quiet);
+	tcase_add_test(def_output, call_offset_level);
 	tcase_add_loop_test(def_output, disabled_def_output, LL_TRACE, LL_CRITICAL);
 	tcase_add_test(def_output, message_origin);
 	suite_add_tcase(suite, def_output);
