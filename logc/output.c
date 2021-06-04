@@ -72,12 +72,6 @@ void syslog_output(struct output *out, char **str, size_t *str_len,
 	};
 }
 
-void free_syslog_output(struct output *out) {
-	if (out->format != default_format())
-		free_format((struct format*)out->format);
-	fclose(out->f);
-}
-
 void log_add_output(log_t log, FILE *file, int flags, int level, const char *format) {
 	log_allocate(log);
 	size_t index = log->_log->outs_cnt;

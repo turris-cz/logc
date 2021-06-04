@@ -35,7 +35,6 @@ static void syslog_setup() {
 
 static void syslog_teardown() {
 	fakesyslog_free();
-	tlog->syslog = false;
 	teardown();
 	ck_assert_int_eq(0, stderr_len);
 }
@@ -44,6 +43,14 @@ START_TEST(simple_warning) {
 	warning("This is warning!");
 	ck_assert_int_eq(1, fakesyslog_cnt);
 	ck_assert_str_eq("WARNING:tlog: This is warning!\n", fakesyslog[0].msg);
+}
+END_TEST
+
+START_TEST(syslog_format) {
+	log_syslog_format(tlog, LOG_FORMAT_PLAIN);
+	warning("This is warning!");
+	ck_assert_int_eq(1, fakesyslog_cnt);
+	ck_assert_str_eq("tlog: This is warning!\n", fakesyslog[0].msg);
 }
 END_TEST
 
@@ -56,6 +63,11 @@ static void suite() {
 	tcase_add_checked_fixture(tc_syslog, syslog_setup, syslog_teardown);
 	tcase_add_test(tc_syslog, simple_warning);
 	suite_add_tcase(suite, tc_syslog);
+
+	TCase *tc_format = tcase_create("format");
+	tcase_add_checked_fixture(tc_format, syslog_setup, syslog_teardown);
+	tcase_add_test(tc_format, syslog_format);
+	suite_add_tcase(suite, tc_format);
 
 	unittests_add_suite(suite);
 }

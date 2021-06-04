@@ -84,7 +84,7 @@ END_TEST
 START_TEST(check_origin_disabled_format) {
 	log_add_output(tlog, stderr, 0, LL_INFO, LOG_FP_ORIGIN " %m");
 
-	logc(tlog, LL_NOTICE, "foo");
+	log_notice(tlog, "foo");
 
 	fflush(stderr);
 	ck_assert_str_eq(stderr_data, "tlog: foo\n");
@@ -96,7 +96,7 @@ START_TEST(check_origin_format) {
 	log_set_use_origin(tlog, true);
 
 	unsigned line = __LINE__ + 1;
-	logc(tlog, LL_NOTICE, "foo");
+	log_notice(tlog, "foo");
 
 	fflush(stderr);
 	char *expected;
@@ -104,6 +104,28 @@ START_TEST(check_origin_format) {
 	ck_assert_int_eq(stderr_len, len);
 	ck_assert_str_eq(stderr_data, expected);
 	free(expected);
+}
+END_TEST
+
+START_TEST(plain_format) {
+	log_add_output(tlog, stderr, 0, 0, LOG_FORMAT_PLAIN);
+
+	log_notice(tlog, "foo");
+
+	const char *expected = "tlog: foo\n";
+	ck_assert_str_eq(stderr_data, expected);
+	ck_assert_int_eq(stderr_len, strlen(expected));
+}
+END_TEST
+
+START_TEST(full_format) {
+	log_add_output(tlog, stderr, 0, 0, LOG_FORMAT_FULL);
+
+	log_notice(tlog, "foo");
+
+	const char *expected = "NOTICE:tlog: foo\n";
+	ck_assert_str_eq(stderr_data, expected);
+	ck_assert_int_eq(stderr_len, strlen(expected));
 }
 END_TEST
 
@@ -128,6 +150,12 @@ static void suite() {
 	tcase_add_test(origin, check_origin_disabled_format);
 	tcase_add_test(origin, check_origin_format);
 	suite_add_tcase(suite, origin);
+
+	TCase *predefined = tcase_create("predefined formats");
+	tcase_add_checked_fixture(predefined, setup, teardown);
+	tcase_add_test(predefined, plain_format);
+	tcase_add_test(predefined, full_format);
+	suite_add_tcase(suite, predefined);
 
 	unittests_add_suite(suite);
 }

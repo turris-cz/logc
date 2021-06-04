@@ -16,6 +16,7 @@ V0.0 {
 		log_rm_output;
 		log_wipe_outputs;
 		log_stderr_fallback;
+		log_syslog_format;
 		log_flush;
 
 		log_bind;

@@ -57,8 +57,7 @@ void log_allocate(log_t log) {
 void log_free(log_t log) {
 	if (!log->_log)
 		return;
-	if (log->_log->syslog_format)
-		free_format(log->_log->syslog_format);
+	free_format(log->_log->syslog_format);
 	log_wipe_outputs(log);
 	free(log->_log);
 	log->_log = NULL;
@@ -292,7 +291,7 @@ void _logc(log_t log, enum log_message_level msg_level,
 		syslog_output(&out, &str, &str_len,
 				log->_log ? log->_log->syslog_format : NULL);
 		DO_LOG(out);
-		free_syslog_output(&out);
+		fclose(out.f);
 		syslog(msg2syslog_level(msg_level), "%s", str);
 		free(str);
 	}

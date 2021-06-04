@@ -162,8 +162,9 @@ void log_wipe_outputs(log_t) __attribute__((nonnull));
 // Fallback is used if no other output is configured.
 void log_stderr_fallback(log_t, bool enabled) __attribute__((nonnull));
 
-// Set format used to output messages to syslog
-void log_syslog_format(log_t, const char *format) __attribute__((nonnull));
+// Set format used to output messages to syslog.
+// To revert to default you can pass NULL as format.
+void log_syslog_format(log_t, const char *format) __attribute__((nonnull(1)));
 
 // Flush all outputs
 // This should be always called when your program is about to exit to ensure that

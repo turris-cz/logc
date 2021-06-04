@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - detection of distribution archive for gperf detection when building outside of
   source files tree
+- custom syslog format memory leak
 
 
 ## [0.2.1] - 2021-05-25
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Missing `cppcheck` is not fatal error if linters are enabled
+
 
 ## [0.2.0] - 2021-05-24
 ### Added
