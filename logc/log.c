@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <signal.h>
 #include "log.h"
 #include "format.h"
 #include "output.h"
@@ -32,6 +33,14 @@
 #include "util.h"
 
 LOG(logc_internal)
+// Set we use to mask all signals when we output logs
+sigset_t sigfullset;
+
+
+__attribute__((constructor))
+static void constructor() {
+	sigfillset(&sigfullset);
+}
 
 const struct _log _log_default = {
 	.level = DEF_LEVEL,
@@ -270,6 +279,9 @@ void _logc(log_t log, enum log_message_level msg_level,
 	bool msg_empty = vsnprintf(NULL, 0, msgformat, args) == 0;
 	va_end(args);
 
+	sigset_t sigorigset;
+	sigprocmask(SIG_BLOCK, &sigfullset, &sigorigset);
+
 #define DO_LOG(OUT) { \
 		va_start(args, msgformat); \
 		do_log(&OUT, msg_level, name, file, line, func, use_origin, msg_empty, stderrno, msgformat, args); \
@@ -295,6 +307,8 @@ void _logc(log_t log, enum log_message_level msg_level,
 		syslog(msg2syslog_level(msg_level), "%s", str);
 		free(str);
 	}
+
+	sigprocmask(SIG_SETMASK, &sigorigset, NULL);
 
 	errno = 0; // always end with errno zero
 }

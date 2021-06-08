@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added 
 - support for binding logs to allow combination of multiple log instances to
   single one
+- signal masking for `_logc` function and thus for all log outputing functions
 
 ### Changed
 - Some functions return defaults directly without allocating internal log structure

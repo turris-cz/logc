@@ -1,0 +1,70 @@
+= LogC and execution concurrency
+
+It is common that logs are outputted from multiple parts of program. Those parts
+can be executing at the same. The reason for it can be either signal execution or
+threads. LogC tries to support such concurrency for logging hustle free.
+
+== Signals
+
+The signal can be delivered any time during execution of program and the critical
+moment for LogC that is when producing output. The solution for this is temporally
+masking of all signals. This is unconditional and happens automatically no matter
+if your application uses signals or not.
+
+The signal safety applies only to `_logc` function. You should never configure
+LogC instance from signal handle unless you are sure that LogC function wasn't
+interrupted.
+
+== Threads
+
+Threads safety is not yet covered. It is suggested to not use LogC in threaded
+application for now.
+
+
+== Subprocess
+
+There are two cases to cover with subprocesses:
+- after `fork`
+- after `fork` and `exec`
+
+=== After only fork
+
+The process running after fork is same as parent and thus it uses same instance of
+LogC. The issue is that fork unshares structures and thus configuration of logs no
+longer propagates to subprocess. This makes subprocess standalone in terms of
+logging.
+
+Right now there is no generic support to handle this divide except of approaching
+the subprocess as if it would have nothing to do with LogC. It is advised to reset
+top level log's configuration and redirect `stderr` to pipe.
+
+=== After fork and exec
+
+The subprocess after exec is going to be just completely different process. It is
+going to have nothing to do with LogC most likely and thus its logging has to be
+handled like some generic text. There are two approaches. We either share the same
+output device or we redirect output to pipe.
+
+==== Sharing the output
+
+This is the easy way to allow output from subprocess to be propagated to the user.
+This of course works only for single output and can cause output mixing if
+subprocess outputs at the same time as original process.
+
+You have to make sure that output for logs is same file number as subprocess
+expects to output logs to. This is commonly the `stderr` and thus `STDERR_FILENO`.
+
+This is common mostly when you wait for subprocess completion as in such case the
+output mixing is not an issue.
+
+The biggest disadvantage is that most programs support only one output for logs
+while LogC allows configuration of multiple outputs. This means that there is no
+way to fully map LogC outputs to subprocess.
+
+==== Piping logs
+
+This is suggested and supported way of handling logs from subprocesses in LogC.
+You have to setup pipes to redirect output of logs from subprocess. In original
+process you have to read this pipe and output any line you encounter trough LogC.
+
+There is not any code that helps with this setup in LogC but it is planned.
