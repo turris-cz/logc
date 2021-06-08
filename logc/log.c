@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#define DEFLOG log_logc_internal
 #include "log.h"
 #include <stdarg.h>
 #include <errno.h>
@@ -32,7 +31,6 @@
 #include "level.h"
 #include "util.h"
 
-LOG(logc_internal)
 // Set we use to mask all signals when we output logs
 sigset_t sigfullset;
 

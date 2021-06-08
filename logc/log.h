@@ -25,9 +25,6 @@
 #include "output.h"
 #include "format.h"
 
-// Our own log
-extern log_t log_logc_internal;
-
 struct _log {
 	int level;
 	struct log *dominator;
