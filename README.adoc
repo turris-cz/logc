@@ -1,0 +1,4 @@
+= C project template
+CZ.NIC z.s.p.o. <packaging@turris.cz>
+v1.0, 2021-07-09
+:icons:
