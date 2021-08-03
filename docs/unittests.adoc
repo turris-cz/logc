@@ -1,0 +1,92 @@
+= Unit tests
+
+The c-template provides Check based unit testing. The default API of Check is
+expanded and most of the common code is hopefully moved to macros that
+automatically generate it.
+
+Before you continue reading you should study
+https://libcheck.github.io/check/doc/doxygen/html/check_8h.html[Check's API].
+
+The organization of tests is that every C file is one specific suite. Every
+suite contains one or more cases and cases contain one or more tests. The suite
+creation is handled automatically as well as collection to central check handle.
+You as a user have to define only test cases and tests.
+
+This is the minimal test suite picked from `tests/unittests/count.c`:
+
+[,c]
+----
+#include <string.h>
+#define SUITE "count"
+#include "unittests.h"
+
+#include <foo.h>
+
+TEST_CASE(simple) {}
+
+TEST(simple, empty) {
+	char *text = "";
+	FILE *f = fmemopen(text, strlen(text), "r");
+	ck_assert_int_eq(count_foo(f), 0);
+	fclose(f);
+}
+END_TEST
+----
+
+Notices the definition of `SUITE` as string before `unittests.h` inclusion. This
+is required and specifies the name of suite. You can use the name in
+`CK_RUN_SUITE` environment variable to run only specific suite.
+
+The test cases are defined using `TEST_CASE` macro. This macro requires at least
+one attribute to be passed and that is name of case. The name is used to
+construct function name thus you should use only characters allowed for such
+definition. You can also use the name to run only specific case by setting it to
+environment variable `CK_RUN_CASE`.
+
+The `TEST_CASE` macro optionally takes three additional attributes. The full
+definition is `TEST_CASE(name, setup, teardown, timeout)` where `setup` is setup
+function, `teardown` is teardown function and `timeout` is test case timeout
+(timeout for all tests in the test case). As `setup` and `teardown` is used
+macro `DEFAULT_SETUP` and `DEFAULT_TEARDOWN` respectively. These macros can be
+set by you before `unittests.h` inclusion, otherwise they are set to
+`basic_setup` and `basic_teardown`. The default timeout (refer to check
+documentation to see what that means) is used if `timeout` if not provided.
+
+The tests them self are registered using `TEST` and its variants macros and
+terminated with `END_TEST`. We define the following test defining macros:
+
+TEST(test_case_name, name):: This is the basic test macro. It registers the
+regular test to test case of given name.
+
+TEST_RAISE_SIGNAL(test_case_name, name, signal):: This test checks if test ends
+with provided signal number. Note that teardown is not run if signal is thrown
+from test itself.
+
+TEST_EXIT(test_case_name, name, exit_value):: Such test checks exit code. Note
+that teardown is not run if exit is called from test itself.
+
+LOOP_TEST(test_case_name, name, start, end):: This is parametrized test that is
+run with argument `_i` starting with `start` and ending with `end` value
+incremented by one.
+
+LOOP_TEST_RAISE_SIGNAL(test_case_name, name, signal, start, end):: The
+`TEST_RAISE_SIGNAL` variant for `LOOP_TEST`.
+
+LOOP_TEST_EXIT(test_case_name, name, exit_value, start, end):: The `TEST_EXIT`
+variant for `LOOP_TEST`.
+
+ARRAY_TEST(test_case_name, name, array):: This is a parametrized test where
+parameters are from statically allocated array (it has to be statically
+allocated so we can get size and register appropriate number of iterations). The
+`_d` variable in test provides access to the currently tested array item. For
+full example of usage please refer to `tests/unittests/config.c` file.
+
+ARRAY_TEST_RAISE_SIGNAL(test_case_name, name, signal, array):: The
+`TEST_RAISE_SIGNAL` variant for `ARRAY_TEST`.
+
+ARRAY_TEST_EXIT(test_case_name, name, exit_value, array):: The `TEST_EXIT`
+variant for `ARRAY_TEST`.
+
+[NOTE]
+  The C file is not automatically compiled. You have to add it as source to
+  unit test application in the `tests/unittests/Makefile` file.

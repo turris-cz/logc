@@ -1,0 +1,4 @@
+include:
+  - project: 'turris/c-template'
+    ref: base
+    file: '/base-ci.yml'

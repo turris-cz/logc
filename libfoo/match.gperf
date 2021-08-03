@@ -1,0 +1,32 @@
+%compare-lengths
+%compare-strncmp
+%ignore-case
+
+%pic
+%null-strings
+%readonly-tables
+%switch=1
+%language=ANSI-C
+
+%define hash-function-name gperf_match_hash
+%define lookup-function-name gperf_match
+%define string-pool-name gperf_match_string
+%define slot-name id
+%define constants-prefix MATCH
+
+%delimiters=,
+
+%struct-type
+%{
+struct gperf_match {
+    int id;
+    bool matches;
+};
+%}
+
+struct gperf_match;
+
+%%
+foo, true
+fee, false
+%%

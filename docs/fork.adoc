@@ -1,0 +1,189 @@
+= Forking
+
+Before you start to develop your project you have to tweak c-template to suit
+your needs. This is minimal checklist you want to follow to update the code to
+your needs.
+
+
+== 0. Git project preparation
+
+The first step is to prepare empty git project. You want create empty directory,
+place bare-bone readme and add that to the new git repository. The following
+code should give you the idea of what you should do:
+
+[,sh]
+----
+mkdir newproj
+cd newproj
+cat >README.adoc <<EOF
+= New project
+CZ.NIC z.s.p.o. <packaging@turris.cz>
+v1.0, 2021-07-09
+:icons:
+
+This project is the new project. Make sure to describe here your project before
+commiting as well as chaning the name of project on the first line.
+EOF
+git init
+git commit --gpg-sign --message 'Initial commit' README.adoc
+git checkout --branch dev
+----
+
+The next step is to merge c-template to your new project.
+
+[,sh]
+----
+git remote add template https://gitlab.nic.cz/turris/c-template.git
+git fetch template
+git merge --allow-unrelated-historie template/master
+----
+
+You have to resolve merge conflict in the `README.adoc` file to complete merge.
+
+The following steps are going to be about modifying the files introduced by
+merge and as last step we squash all changes to the merge commit so our history
+starts nice and clean.
+
+
+== 1. Rename the project
+
+The first step is for sure the project rename. The c-template uses `c-template`
+name in various locations and this should be name of your project instead. You
+can use `grep -Rn c-template` to locate all occurrences of `c-template`. To
+rename all relevant code should be:
+
+[,sh]
+----
+set -i 's/c-template/newproj/g' .gitlab-ci/release.sh .gitignore configure.ac
+----
+
+Note that the suggestion here might not be all so you should verify all usages
+of `c-template` string in the project on your own as it is easier for us to
+cover places where `c-template` should stay rather than opposite.
+
+The `c-template` should be kept in the following files:
+
+- `.gitlab-ci.yml` as there it references common base stored in c-template
+  repository. The referenced branch won't and should not be available in your
+  project.
+- `.gitlab-ci/Dockerfile-*` files reference image build and maintained centrally
+  in the c-template registry thus reference should not be changed there.
+
+
+== 2a. Remove library if not needed
+
+You want to remove existing library framework if you plan to write only the
+application. To do so you have to remove library itself and its tests.
+
+To remove library you can just remove whole directory `libfoo` and `include`.
+With that you also have to remove the appropriate _include_ in the top level
+`Makefile.am` file. The last place is config file generation in `configure.ac`
+where you want to remove `libfoo/foo.pc` from `AC_CONFIG_FILES`.
+
+To remove tests you need to remove `tests/unittests/count.c` and an appropriate
+section from `tests/unittests/Makefile.am`. The section you want to remove is
+the one building `unittests-libfoo`.
+
+The last optional operation is to remove the following lines from `configure.ac`
+as they are not required if you are not building library:
+
+[,c]
+----
+AM_PROG_AR
+LT_INIT
+PKG_INSTALLDIR
+----
+
+
+== 2b. Replicate and rename libraries
+
+The library rename have to be performed by not only renaming the `libfoo`
+directory but primarily by changing the content of `libfoo/Makefile.am` and code
+of course. You can simply replace the `libfoo` to your name with `sed`.
+
+You have to also update _include_ path in `Makefile.am` and `AC_CONFIG_FILES`
+reference in the file `configure.ac` to be correct after rename.
+
+Do not forget to also rename tests and library reference in
+`tests/unittests/Makefile.am`.
+
+To implement multiple libraries you can duplicate `libfoo` directory and all
+relevant code where `libfoo` is being referenced (those are sections that have
+to be changed on library rename).
+
+The library uses gperf to showcase its usage. Feel free to read about
+link:./gperf.adoc[gperf in c-template], that is not just about how to use it but
+also about how to remove it if you do not need it.
+
+
+== 3a. Remove application if not needed
+
+You want to remove existing application `foo` if you plan to write library only
+project. You have to remove not only `foo` sources but also tests.
+
+The `foo` sources are in `src` directory, remove it. Then the appropriate
+_include_ has to be removed from `Makefile.am`.
+
+The application have two types of tests and we have to remove both. The first
+are unit tests that are stored in `tests/unittests`. There you have to remove
+`config.c` file. You have to also remove an appropriate section from
+`/tests/unittests/Makefile.am`. The second type of tests, integration tests, can
+be removed all together as they are used only for applications. Remove the whole
+directory `tests/integration` and remove an appropriate _include_ from
+`tests/Makefile.am`. With integration tests missing you can also move unit tests
+one level higher for cleaner files tree.
+
+The last non-essential step is to remove no longer needed requirements from
+`configure.ac`. You most likely not going to need `libconfig` and `argp` in your
+library so feel free to remove them. Without `libconfig` we no longer need
+default configuration path thus remove it as well. You can also remove `bats`
+that is checked in `Tests` section.
+
+
+== 3b Replicate and rename applications
+
+The application rename has to be performed as clearly you do not want to write
+application called `foo`. The rename has to be performed in the
+`src/Makefile.am` file by simply replacing `foo` with name you want to use.
+
+The `src` directory should be used only if you plan to name binary exactly the
+same way as the project otherwise it should be named somehow relative to the
+binary name. The ideal naming scheme for project `newproj` with binary named for
+example `newproj-foo` would be to rename `src` directory to `foo`.
+
+You can also easily enough have multiple applications by just simply duplicating
+the source code and modifying/duplicating the sections you touch when you are
+renaming the application.
+
+The `foo` binary in the c-template project depends on `libfoo`. Depending on
+what you need you want to remove this link dependency or change it to new
+library name.
+
+The last location where application source file as well as application binary is
+referenced are tests. You have to rename binary used in
+`tests/integration/foo.bats` and unit test name in
+`/tests/unittests/Makefile.am`.
+
+
+== 4. Cleanup
+
+Remove any c-template specific files. These are files such as this
+documentation.
+
+[,sh]
+----
+rm -rf docs
+----
+
+Do not forget to write your own documentation!
+
+
+== 5. Commit all changes as part of merge commit
+
+The last step is to stage all changes you made and modify merge commit created at
+the beginning. This can be done by:
+
+[sh]
+----
+git commit --amend -C HEAD .
+----

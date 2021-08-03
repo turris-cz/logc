@@ -1,4 +1,99 @@
 = C project template
 CZ.NIC z.s.p.o. <packaging@turris.cz>
-v1.0, 2021-07-09
+v0.0, 2021-07-09
 :icons:
+
+This is description of your project. Do NOT forget to modify it together with
+title of this file, project dependencies and other parts of this file which
+would require the change.  
+
+
+
+== Dependencies
+
+* https://gitlab.nic.cz/turris/logc[logc]
+* http://www.hyperrealm.com/libconfig/libconfig.html[libconfig]
+* On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone]
+
+For builds from repository (not required when using release tarballs):
+
+* autotools
+* autoconf-archive
+* https://www.gnu.org/software/gperf[gperf]
+
+For tests:
+
+* https://libcheck.github.io/check[check]
+* https://bats-core.readthedocs.io/en/stable/index.html[bats]
+* Optionally http://www.valgrind.org[valgrind]
+
+For code coverage report:
+
+* http://ltp.sourceforge.net/coverage/lcov.php[lcov]
+
+For linting:
+
+* https://github.com/danmar/cppcheck[cppcheck]
+* https://dwheeler.com/flawfinder/[flawfinder]
+
+
+== Compilation
+
+Start with `./bootstrap` when you are building sources directly from Git. You
+can skip this step if you are using distribution archive.
+
+To compile this project you have to run:
+
+----
+./configure
+make
+----
+
+Subsequent installation can be done with `make install`.
+
+
+== Running tests
+
+This project contains basic tests in directory tests.
+
+To run tests they have to be enabled using configure option `--enable-tests`.
+To execute all tests run:
+
+----
+./configure --enable-tests
+make check
+----
+
+You can also run tests with Valgrind:
+
+----
+./configure --enable-tests --enable-valgrind
+make check-valgrind
+----
+
+To run checks with just one specific Valgrind tool you can append its name to
+target name. For example to run only Memcheck you can use `make
+check-valgrind-memcheck`.
+
+=== Code coverage report
+
+There is also possibility to generate code coverage report from test cases. To
+do so you can run:
+
+----
+./configure --enable-tests --enable-code-coverage
+make check-code-coverage
+----
+
+== Linting the code
+
+The linting has to be enabled using configure option `--enable-linters`. To lint
+the source code you can then run:
+
+----
+./configure --enable-linters
+make lint
+----
+
+To run only specific liter you can append dash with its name. For example to run
+only cppcheck you can use `make lint-cppcheck`.

@@ -1,0 +1,8 @@
+V0.0 {
+	global:
+		log_foo;
+
+		count_foo;
+
+	local: *;
+};

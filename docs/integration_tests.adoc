@@ -1,0 +1,20 @@
+= Integration tests
+
+The most of the testing should be performed in unit tests but although we are
+sure that code segments work as expected we can't know if they are put together
+correctly in the application. Exactly for that purpose we have to do integration
+testing.
+
+Given the nature of library the integration testing as meant here is only for
+applications. The combination of parts of course makes sense in the library as
+well but thanks to library being tested as is we do not need anything else other
+than unit testing framework for that.
+
+We use here Bats, the Bash testing framework, to implement integration tests.
+The point is to have something that spawns and manages processes simply and
+produces TAP output (for integration with other testing frameworks). The shell
+is probably the easiest way to spawn and play around with applications. This of
+course does not mean that it is the only possible option. The well chosen option
+for some projects is going to be Python with Pytest and TAP producing plugin.
+The point is to use what is easiest and provides most direct way to test
+behavior of developed application.
