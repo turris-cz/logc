@@ -5,15 +5,6 @@ library extension. It is intentionally separate to not add unnecessary dependenc
 on Argp when user is going to use different argument parser. Note that probably
 only GNU Lib C provides Argp and in other cases external standalone Argp library
 is required.
-  
-== Inclusion
-
-You have to first include link:./logc.adoc[LogC]. LogC Argp is then included the
-same way. You should link your program with `liblogc_argp` (as well as with
-`libargp_standalone` if required). You can also use `pkg-config` configuration
-under name `logc_argp`.
-
-In code you have to just include `logc_argp.h`.
 
 
 == Provided options
@@ -29,6 +20,17 @@ Application::
 
 Daemon::
 - `--no-syslog` Do not send logs to syslog.
+
+  
+== Inclusion
+
+You have to first include link:./logc.adoc[LogC]. LogC Argp is then included the
+same way. You should link your program with `liblogc_argp` (as well as with
+`libargp_standalone` if required). You can also use `pkg-config` configuration
+under name `logc_argp`.
+
+In code you have to just include `logc_argp.h`.
+
 
 == Usage
 

@@ -1,0 +1,12 @@
+V0.0 {
+	global:
+		logc_config_load_config;
+		logc_config_load_setting;
+
+		config_setting_path;
+		config_type_name;
+
+		log_check_config_setting_type;
+		
+	local: *;
+};

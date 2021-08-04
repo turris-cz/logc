@@ -7,10 +7,10 @@ RUN \
   apt-get update && \
   apt-get -y upgrade && \
   apt-get -y install --no-install-recommends \
-    autoconf autoconf-archive automake libtool \
+    autoconf autoconf-archive automake libtool libconfig-dev \
     make pkg-config gcc gperf \
     check cppcheck valgrind lcov \
-	zip xz-utils \
+    zip xz-utils \
     && \
   apt-get clean
 

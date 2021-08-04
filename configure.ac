@@ -24,6 +24,18 @@ AC_CHECK_FILE([${0%/*}/bootstrap],[
 ])
 AM_CONDITIONAL([GPERF_GENERATE], [test -n "$GPERF"])
 
+AC_ARG_WITH([libconfig],
+  [AS_HELP_STRING([--with-libconfig], [build logc_config integration library @<:@default=check@:>@])],
+  [], [with_libconfig=check]
+)
+AS_IF([test "x$with_libconfig" != xno],
+  [PKG_CHECK_MODULES([libconfig], [libconfig],
+    [with_libconfig=yes],
+    [AS_IF([test "x$with_libconfig" != xcheck], [AC_MSG_FAILURE([Unable to find libconfig, logc_config won't be build])])]
+  )]
+)
+AM_CONDITIONAL(LIBCONFIG, [test "x$with_libconfig" = "xyes"])
+
 
 dnl Tests
 AC_ARG_ENABLE([tests], AC_HELP_STRING([--enable-tests], [Whether to enable unit tests]))
@@ -46,6 +58,11 @@ dnl Coverage
 AX_CODE_COVERAGE
 
 
-AC_CONFIG_FILES([Makefile logc/logc.pc logc_argp/logc_argp.pc])
+AC_CONFIG_FILES([
+  Makefile
+  logc/logc.pc
+  logc_argp/logc_argp.pc
+  logc_config/logc_config.pc
+ ])
 
 AC_OUTPUT

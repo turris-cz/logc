@@ -17,6 +17,7 @@ simple to include as possible.
 == Dependencies
 
 * On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone]
+* http://hyperrealm.github.io/libconfig/[libconfig] for optional liblogc_config
 
 For bootstrap (not release tarballs):
 
@@ -170,6 +171,8 @@ LogC provides additional optional extensions documented separately:
 
 - link:./docs/logc_argp.adoc[LogC Argp] that implements common log related
   arguments.
+- link:./docs/logc_config.adoc[LogC Config] that implements common log settings
+  from configuration files.
 - link:./docs/logc_assert.adoc[LogC Assert] providing standard `assert.h`
   compatibility.
 - link:./docs/logc_asserts.adoc[LogC Asserts] provides extension for LogC Assert.

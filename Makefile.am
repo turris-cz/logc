@@ -10,6 +10,9 @@ linted_files =
 
 include $(srcdir)/logc/Makefile.am
 include $(srcdir)/logc_argp/Makefile.am
+if LIBCONFIG
+include $(srcdir)/logc_config/Makefile.am
+endif
 
 include $(srcdir)/utils/gperf.am
 

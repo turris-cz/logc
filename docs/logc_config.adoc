@@ -1,0 +1,88 @@
+= LogC Config programmers guide
+
+This document describes usage of libconfig based configuration parsing for LogC.
+This is dedicated library extension. It is intentionally separate to not add
+unnecessary dependency on libconfig when user is not going to use configuration
+parsing or plans to use the different parser.
+
+
+== Supported settings
+
+- `level` Integer number setting verbosity 
+- `file` String with path to file log file.
+- `syslog` Boolean that controls if logs should be send to syslog. This
+  effectivelly can disable syslog in case of daemon or enable in case of regular
+  application.
+
+  
+== Inclusion
+
+You have to first include link:./logc.adoc[LogC]. LogC Config is then included
+the same way. You should link your program with `liblogc_config` as well as
+with `libconfig`. You can also use `pkg-config` configuration under name
+`logc_config`.
+
+In code you have to just include `logc_config.h`.
+
+
+== Usage
+
+The first of all you should bind `log_logc_config` to your primary log
+(`log_bind(log, log_logc_config)`). The library uses it to report issues with
+configuration to the user.
+
+To use LogC Config you need to call `logc_config_load(log, config)`. The
+`config` argument can be either of type `config_t` or `config_setting_t`. You
+should pass `config_t` unless you have special needs.
+
+[,C]
+----
+config_t config;
+config_init(&config);
+if (config_read_file(&config, config_file_path) == CONFIG_FALSE) {
+	error("Unable to read configuration file '%s': %s",
+		config_file_path, config_error_text(&config));
+	config_destroy(&config);
+	return;
+}
+log_bind(log, log_logc_config);
+logc_config_load(log, &config);
+// TODO parse your configuration.
+----
+
+In case the `config` argument is of `config_t` type then logging settings are
+expected to be in the group `log` (thus for example `level` has path `log.level`
+in the configuration file). The minimal example of such configuration file would
+be:
+
+----
+log: {
+	level = 1;
+}
+----
+
+In case the `config` argument is of `config_setting_t` type then logging
+settings are expected to be part of that setting.
+
+[NOTE]
+  The `logc_config_load` is only a macro. There are actually a two different
+  functions `logc_config_load_config` and `logc_config_load_setting` that are
+  used depending on config structure passed. In some cases such as when you need
+  function point you should use those instead of the `logc_config_load` macro.
+
+
+== Checking the setting type
+
+`log_check_config_setting_type(log, setting, type)` function can be used to
+check for config setting type in a consistent way.
+
+The header also defines `check_config_setting_type` in case `DEFLOG` is defined
+before the inclusion.
+
+[,C]
+----
+const config_setting_t *foo = config_lookup(config, "foo")
+if (foo && check_config_setting_type(foo, CONFIG_TYPE_INT)) {
+	int intfoo = config_setting_get_int(foo);
+}
+----

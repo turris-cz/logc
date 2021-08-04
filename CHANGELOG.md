@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `liblogc_config` for configuration parsing using libconfig
 - log\_argp argument `--no-syslog` for daemon logs as there would be no way to
   disable default syslog otherwise.
 
