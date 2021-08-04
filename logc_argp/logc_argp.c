@@ -83,7 +83,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 				log_add_output(logc_argp_log, file, LOG_F_AUTOCLOSE, 0, LOG_FORMAT_DEFAULT);
 			break; }
 		case ARGPO_SYSLOG:
-			logc_argp_log->syslog = true;
+			log_syslog_format(logc_argp_log, LOG_FORMAT_DEFAULT);
 			// Intentional fall trough
 		case ARGPO_NO_STDERR:
 			log_stderr_fallback(logc_argp_log, false);

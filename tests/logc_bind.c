@@ -118,13 +118,13 @@ END_TEST
 static void syslog_setup() {
 	bind_setup();
 	fakesyslog_reset();
-	tlog->syslog = true;
+	tlog->daemon = true;
 	log_stderr_fallback(tlog, false);
 }
 
 static void syslog_teardown() {
 	fakesyslog_free();
-	tlog->syslog = false;
+	tlog->daemon = false;
 	bind_teardown();
 	ck_assert_int_eq(stderr_len, 0);
 }
@@ -144,8 +144,8 @@ START_TEST(subsub_syslog_warning) {
 END_TEST
 
 START_TEST(sub_syslog_ignored) {
-	log_sub->syslog = true;
-	log_subsub->syslog = true;
+	log_sub->daemon = true;
+	log_subsub->daemon = true;
 	log_warning(log_subsub, "This is warning!");
 	ck_assert_int_eq(1, fakesyslog_cnt);
 	ck_assert_str_eq("WARNING:subsub: This is warning!\n", fakesyslog[0].msg);

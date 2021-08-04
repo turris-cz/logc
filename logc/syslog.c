@@ -17,31 +17,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _LOGC_LOG_H_
-#define _LOGC_LOG_H_
-#define DEFLOG log_logc_internal
-#include <logc.h>
-#include <logc_util.h>
-#include "output.h"
-#include "format.h"
+#include "log.h"
 
-struct _log {
-	int level;
-	struct log *dominator;
-	struct output *outs;
-	size_t outs_cnt;
-	struct format *syslog_format;
-	bool no_stderr;
-	bool no_syslog;
-	bool use_origin;
-};
+bool log_syslog(log_t log) {
+	if (!log->_log)
+		return log->daemon;
+	return (!log->_log->no_syslog && log->daemon) || log->_log->syslog_format;
+}
 
-#define DEF_LEVEL 0
-#define DEF_NO_STDERR false
-#define DEF_NO_SYSLOG false
-#define DEF_USE_ORIGIN false
-extern const struct _log _log_default;
+void log_syslog_format(log_t log, const char *format) {
+	log_allocate(log);
+	free_format(log->_log->syslog_format);
+	log->_log->syslog_format = format ? parse_format(format) : NULL;
+}
 
-void log_allocate(log_t log);
-
-#endif
+void log_syslog_fallback(log_t log, bool enabled) {
+	log_allocate(log);
+	log->_log->no_syslog = !enabled;
+}

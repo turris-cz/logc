@@ -18,6 +18,7 @@ liblogc_la_SOURCES = \
 	%reldir%/output.c \
 	%reldir%/format.h \
 	%reldir%/format.c \
+	%reldir%/syslog.c \
 	%reldir%/util.h
 liblogc_la_CFLAGS = \
 	-isystem '$(srcdir)/include' \

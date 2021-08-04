@@ -43,10 +43,11 @@ static void constructor() {
 const struct _log _log_default = {
 	.level = DEF_LEVEL,
 	.dominator = NULL,
-	.syslog_format = NULL,
 	.outs = NULL,
 	.outs_cnt = 0,
+	.syslog_format = NULL,
 	.no_stderr = DEF_NO_STDERR,
+	.no_syslog = DEF_NO_SYSLOG,
 	.use_origin = DEF_USE_ORIGIN,
 };
 
@@ -294,7 +295,7 @@ void _logc(log_t log, enum log_message_level msg_level,
 		unlock_output(&outs[i]);
 	}
 
-	if (log->syslog && verbose_filter(level, log, NULL)) {
+	if (log_syslog(log) && verbose_filter(level, log, NULL)) {
 		struct output out;
 		char *str;
 		size_t str_len;

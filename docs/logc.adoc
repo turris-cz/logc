@@ -44,7 +44,7 @@ probably want to just statically define it in your program/library.
 ----
 struct log _log_foo = (struct log){
 	.name = "Name",
-	.syslog = false
+	.daemon = false
 };
 ----
 Now you can use this log freely, just note that all LogC functions accept pointer
@@ -60,7 +60,7 @@ Structure `struct log` contains following fields:
 name:: This is name of log. It should be always some printable text for library
 and suggested to be `NULL` for application.
 
-syslog:: With this boolean you can enable/disable sending of logs to
+daemon:: With this boolean you can enable/disable sending of logs to
 syslog. This should be by default set to `true` when you are writing daemon
 expected to run in background and to `false` otherwise.
 

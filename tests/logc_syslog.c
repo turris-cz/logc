@@ -29,7 +29,7 @@ void unittests_add_suite(Suite*);
 static void syslog_setup() {
 	fakesyslog_reset();
 	setup();
-	tlog->syslog = true;
+	tlog->daemon = true;
 	log_stderr_fallback(tlog, false);
 }
 

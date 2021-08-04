@@ -37,21 +37,21 @@ enum log_message_level {
 struct _log;
 struct log {
 	const char *name;
-	bool syslog;
+	bool daemon;
 	struct _log *_log;
 };
 typedef struct log* log_t;
 
 #define APP_LOG(logname) \
-	struct log _log_ ## logname = (struct log){.name = NULL, ._log = NULL, .syslog = false }; \
+	struct log _log_ ## logname = (struct log){.name = NULL, ._log = NULL, .daemon = false }; \
 	log_t log_ ## logname = &_log_ ## logname;
 
 #define DAEMON_LOG(logname) \
-	struct log _log_ ## logname = (struct log){.name = NULL, ._log = NULL, .syslog = true }; \
+	struct log _log_ ## logname = (struct log){.name = NULL, ._log = NULL, .daemon = true }; \
 	log_t log_ ## logname = &_log_ ## logname;
 
 #define LOG(logname) \
-	struct log _log_ ## logname = (struct log){.name = #logname, ._log = NULL, .syslog = false }; \
+	struct log _log_ ## logname = (struct log){.name = #logname, ._log = NULL, .daemon = false }; \
 	log_t log_ ## logname = &_log_ ## logname;
 
 void log_free(log_t) __attribute__((nonnull));
@@ -158,18 +158,29 @@ bool log_rm_output(log_t, FILE*) __attribute__((nonnull));
 // Remove all outputs from log (fallback to stderr)
 void log_wipe_outputs(log_t) __attribute__((nonnull));
 
-// Set if stderr fallback output should be used or not. In default it is enabled.
-// Fallback is used if no other output is configured.
+// Set if stderr fallback output should be used or not. In default it is
+// enabled. Fallback is used if no other output is configured.
 void log_stderr_fallback(log_t, bool enabled) __attribute__((nonnull));
-
-// Set format used to output messages to syslog.
-// To revert to default you can pass NULL as format.
-void log_syslog_format(log_t, const char *format) __attribute__((nonnull(1)));
 
 // Flush all outputs
 // This should be always called when your program is about to exit to ensure that
 // all logs were correctly delivered to logs (syslog is the only exception).
 void log_flush(log_t) __attribute__((nonnull));
+
+//// Output to syslog/////////////////////////////////////////////////////////////
+
+// Check if syslog is enabled or not.
+bool log_syslog(log_t) __attribute__((nonnull));
+
+// Set format used to output messages to syslog.
+// To disable in case of not daemon log or revert to default in case of daemon
+// log you can pass NULL as format.
+void log_syslog_format(log_t, const char *format) __attribute((nonnull(1)));
+
+// Set if syslog fallback output should be used or not. In default it is
+// enabled and syslog is used if log is marked as daemon log.
+// Fallback is used if no other output is configured.
+void log_syslog_fallback(log_t, bool enabled) __attribute__((nonnull));
 
 
 //// Binding /////////////////////////////////////////////////////////////////////
