@@ -12,7 +12,9 @@ logc-*.tar.xz
 logc-*.zip
 
 # Test outputs
-/tests/unittests
+/tests/unittests-logc
+/tests/unittests-logc_argp
+/tests/unittests-logc_config
 test-suite*.log
 tests/*.log
 tests/*.trs
