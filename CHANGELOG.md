@@ -5,10 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- log\_argp argument `--no-syslog` for daemon logs as there would be no way to
+  disable default syslog otherwise.
+
 ### Changed
 - Syslog configuration is now no longer configured using boolean in the log
   structure but rather by using functions with default handled the same way as
   for standard error fallback output.
+
+### Removed
+- log\_argp argument `--no-stderr` as it is easy to redirect or drop standard
+  error output without needing this option
 
 
 ## [0.3.0] - 2021-05-22

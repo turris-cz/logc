@@ -29,7 +29,7 @@ log_t logc_argp_log = NULL;
 enum {
 	ARGPO_LOG_FILE = 1050,
 	ARGPO_SYSLOG,
-	ARGPO_NO_STDERR,
+	ARGPO_NO_SYSLOG,
 	ARGPO_LOG_LEVEL
 };
 
@@ -41,13 +41,13 @@ enum {
 
 static const struct argp_option options[] = {
 	BASE_OPTIONS,
-	{"syslog", ARGPO_SYSLOG, NULL, 0, "Send logs to syslog.", 2},
+	{"syslog", ARGPO_SYSLOG, NULL, 0, "Send logs to the syslog.", 2},
 	{NULL}
 };
 
 static const struct argp_option options_daemon[] = {
 	BASE_OPTIONS,
-	{"no-stderr", ARGPO_NO_STDERR, NULL, 0, "Do not print logs to stderr.", 2},
+	{"no-syslog", ARGPO_NO_SYSLOG, NULL, 0, "Do not send logs to the syslog.", 2},
 	{NULL}
 };
 
@@ -85,8 +85,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 		case ARGPO_SYSLOG:
 			log_syslog_format(logc_argp_log, LOG_FORMAT_DEFAULT);
 			// Intentional fall trough
-		case ARGPO_NO_STDERR:
-			log_stderr_fallback(logc_argp_log, false);
+		case ARGPO_NO_SYSLOG:
+			log_syslog_fallback(logc_argp_log, false);
 			break;
 		case ARGPO_LOG_LEVEL:
 			log_set_level(logc_argp_log, parse_level(arg, state));

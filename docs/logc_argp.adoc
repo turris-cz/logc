@@ -20,18 +20,15 @@ In code you have to just include `logc_argp.h`.
 
 Basic::
 - `--verbose` / `-v` Increases log verbosity by one.
-
 - `--quiet` / `-q` Decreases log verbosity by one.
-
 - `--log-level level` Sets log verbosity to specified `level`.
-
 - `--log-file file` Sends logs to specified `file`.
 
 Application::
 - `--syslog` Send logs to syslog.
 
 Daemon::
-- `--no-stderr` Do not print logs to stderr.
+- `--no-syslog` Do not send logs to syslog.
 
 == Usage
 
