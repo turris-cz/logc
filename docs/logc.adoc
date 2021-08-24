@@ -79,6 +79,7 @@ as using one of the following macros:
 [,C]
 ----
 log_critical(LOG, ...)
+log_fatal(LOG, exit_code, ...)
 log_error(LOG, ...)
 log_warning(LOG, ...)
 log_notice(LOG, ...)
@@ -95,8 +96,14 @@ As an example to print warning containing number you can do
 definition* section e.g. using `APP_LOG(foo)`.
 
 Macro `log_critical(LOG, ...)` not only logs message but also calls `abort()`! Use
-this to handle critical errors causing application exit. Note that you can hook
-your termination routine on abort to cleanup after yourself.
+this to handle critical errors when execution of current code can't continue.
+Note that you can hook your error handling routine on abort to handle critical
+errors.
+
+There is also a special variant of `log_critical` macro `log_fatal` that instead
+of `abort()` calls `exit(exit_code)`. Use this when a critical error should
+cause application exit not a special condition. In general you should use
+`log_fatal` only in an application, never in a library.
 
 There are also simpler variants of these macros. They are named without `log_`
 prefix. To get access to them you have to define macro `DEFLOG` before `logc.h`

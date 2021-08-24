@@ -78,8 +78,7 @@ usage:
 
 critical:: should be used for messages causing program exit or restart or any
   other such drastic measure. This is intended as last measure for program to take
-  if somethings goes horribly wrong. This level can't be suppressed (this is
-  design decision).
+  if somethings goes horribly wrong.
 
 error:: should be used for recoverable problems that highly influence program
   flow. There are commonly reports about outcomes that are not expected and

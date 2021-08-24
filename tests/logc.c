@@ -22,6 +22,7 @@
 #include <check.h>
 #include <signal.h>
 #include <errno.h>
+#include <signal.h>
 #include "logc_fixtures.h"
 
 void unittests_add_suite(Suite*);
@@ -343,6 +344,29 @@ START_TEST(check_custom_file_output) {
 END_TEST
 
 
+void abort_action(int sig) {
+	exit(42);
+}
+struct sigaction *sig_oldact;
+void abort_setup() {
+	struct sigaction action = {
+		.sa_handler = abort_action,
+		.sa_flags = 0,
+	};
+	ck_assert_int_eq(sigemptyset(&action.sa_mask), 0);
+	ck_assert_int_eq(sigaction(SIGABRT, &action, sig_oldact), 0);
+	setup();
+}
+
+START_TEST(cause_exit_critical) {
+	critical("Cause abort");
+}
+
+START_TEST(cause_exit_fatal) {
+	fatal(24, "Cause exit");
+}
+
+
 __attribute__((constructor))
 static void suite() {
 	Suite *suite = suite_create("logc");
@@ -377,6 +401,12 @@ static void suite() {
 	tcase_add_test(custom_output, check_custom_output_wipe);
 	tcase_add_test(custom_output, check_custom_file_output);
 	suite_add_tcase(suite, custom_output);
+
+	TCase *cause_exit = tcase_create("cause exit");
+	tcase_add_checked_fixture(cause_exit, abort_setup, teardown);
+	tcase_add_exit_test(cause_exit, cause_exit_critical, 42);
+	tcase_add_exit_test(cause_exit, cause_exit_fatal, 24);
+	suite_add_tcase(suite, cause_exit);
 
 	unittests_add_suite(suite);
 }

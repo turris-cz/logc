@@ -212,6 +212,7 @@ void _logc(log_t, enum log_message_level,
 
 #define logc(logt, level, ...) _logc(logt, level, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define log_critical(logt, ...) do { logc(logt, LL_CRITICAL, __VA_ARGS__); log_flush(logt); abort(); } while (0)
+#define log_fatal(logt, exit_code, ...) do { logc(logt, LL_CRITICAL, __VA_ARGS__); exit(exit_code); } while (0)
 #define log_error(logt, ...) logc(logt, LL_ERROR, __VA_ARGS__)
 #define log_warning(logt, ...) logc(logt, LL_WARNING, __VA_ARGS__)
 #define log_notice(logt, ...) logc(logt, LL_NOTICE, __VA_ARGS__)
@@ -227,6 +228,7 @@ void _logc(log_t, enum log_message_level,
 #define _LOGC_H_DEFLOG
 
 #define critical(...) log_critical(DEFLOG, __VA_ARGS__)
+#define fatal(...) log_fatal(DEFLOG, __VA_ARGS__)
 #define error(...) log_error(DEFLOG, __VA_ARGS__)
 #define warning(...) log_warning(DEFLOG, __VA_ARGS__)
 #define notice(...) log_notice(DEFLOG, __VA_ARGS__)
