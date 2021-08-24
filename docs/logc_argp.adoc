@@ -54,3 +54,8 @@ argp_parse(&argp_tlog_parser, argc, argv, 0, NULL, NULL);
 [TIP]
   You want to use `logc_argp_daemon_parser` when you define your log using
   `LOG_DAEMON` macro. In other cases you want to use `logc_argp_parser`.
+
+[WARNING]
+  The LogC Argp uses or reserves internally keys from 1050 till 1100 and `'v'`
+  and `'q'`. These are values of `int key` in `struct argp_option`. You should
+  never use them.
