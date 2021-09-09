@@ -1,4 +1,4 @@
-AC_INIT([logc], [0.3.0], [cynerd@email.cz])
+AC_INIT([logc], [0.4.0], [cynerd@email.cz])
 AC_CONFIG_MACRO_DIRS([.m4])
 AC_CONFIG_AUX_DIR([.aux])
 
