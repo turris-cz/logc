@@ -43,6 +43,8 @@ inline int msg2syslog_level(enum log_message_level msg_level) {
 		case LL_DEBUG:
 		case LL_TRACE:
 			return LOG_DEBUG;
+		default:
+			return LOG_INFO;
 	}
 }
 
