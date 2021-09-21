@@ -20,8 +20,8 @@ const static struct argp_option argp_options[] = {
 	{NULL}
 };
 
-const char *argp_program_version = PACKAGE_STRING;
-const char *argp_program_bug_address = PACKAGE_BUGREPORT;
+const char *argp_program_version = PROJECT_VERSION;
+const char *argp_program_bug_address = "packaging@turris.cz";
 const static struct argp argp_parser = {
 	.options = argp_options,
 	.parser = parse_opt,

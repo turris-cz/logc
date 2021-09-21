@@ -31,4 +31,11 @@ void basic_teardown();
 		obscope_end(_obstack_scope_guard_); \
 	} while(false);
 
+
+// Access to test files directory (the TEST_FILES environemnt variable)
+const char *test_files() __attribute__((returns_nonnull));
+
+// Returns path to test file. The path is allocated on t_obstack.
+char *test_file(char const *file);
+
 #endif

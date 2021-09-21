@@ -1,0 +1,10 @@
+option('defconfig',
+  type: 'string',
+  value: '/etc/turis/template.cfg',
+  description: 'Default path to the configuration file'
+)
+option('tests',
+  type: 'feature',
+  value: 'auto',
+  description: 'Expect tests to be build and check for their dependencies'
+)

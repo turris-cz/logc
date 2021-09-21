@@ -8,18 +8,13 @@ title of this file, project dependencies and other parts of this file which
 would require the change.  
 
 
-
 == Dependencies
 
-* https://gitlab.nic.cz/turris/logc[logc]
+* https://mesonbuild.com/[Meson build system]
+* https://www.gnu.org/software/gperf[gperf]
+* https://gitlab.nic.cz/turris/logc[LogC]
 * http://www.hyperrealm.com/libconfig/libconfig.html[libconfig]
 * On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone]
-
-For builds from repository (not required when using release tarballs):
-
-* autotools
-* autoconf-archive
-* https://www.gnu.org/software/gperf[gperf]
 
 For tests:
 
@@ -39,41 +34,33 @@ For linting:
 
 == Compilation
 
-Start with `./bootstrap` when you are building sources directly from Git. You
-can skip this step if you are using distribution archive.
-
 To compile this project you have to run:
 
 ----
-./configure
-make
+meson setup builddir
+meson compile -C builddir
 ----
 
-Subsequent installation can be done with `make install`.
+Subsequent installation can be done with `meson install -C builddir`.
 
 
 == Running tests
 
 This project contains basic tests in directory tests.
 
-To run tests they have to be enabled using configure option `--enable-tests`.
-To execute all tests run:
+To run tests you have to either use `debug` build type (which is commonly the
+default for meson) or explicitly enable them using `meson configure
+-Dtests=enabled builddir`. To execute all tests run:
 
 ----
-./configure --enable-tests
-make check
+meson test -C builddir
 ----
 
-You can also run tests with Valgrind:
+You can also run tests with Valgrind tool such as `memcheck`:
 
 ----
-./configure --enable-tests --enable-valgrind
-make check-valgrind
+VALGRIND=memcheck meson test -C builddir
 ----
-
-To run checks with just one specific Valgrind tool you can append its name to
-target name. For example to run only Memcheck you can use `make
-check-valgrind-memcheck`.
 
 === Code coverage report
 
@@ -81,19 +68,22 @@ There is also possibility to generate code coverage report from test cases. To
 do so you can run:
 
 ----
-./configure --enable-tests --enable-code-coverage
-make check-code-coverage
+meson setup -Db_coverage=true builddir
+meson test -C builddir
+ninja -C builddir coverage-html
 ----
+
+The coverage report is generated in directory:
+`builddir/meson-logs/coveragereport`.
 
 == Linting the code
 
-The linting has to be enabled using configure option `--enable-linters`. To lint
-the source code you can then run:
+The code can also be linted if linters are installed. There are two linter
+supported at the moment. There is `cppcheck` and `flawfinder`. To run them you
+can do:
 
 ----
-./configure --enable-linters
-make lint
+meson setup builddir
+meson compile -C builddir cppcheck
+meson compile -C builddir flawfinder
 ----
-
-To run only specific liter you can append dash with its name. For example to run
-only cppcheck you can use `make lint-cppcheck`.

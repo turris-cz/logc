@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2021, CZ.NIC z.s.p.o. (http://www.nic.cz/)
+#include <stdio.h>
 #include <string.h>
 #include "log.h"
 
-#include "match.gperf.c"
+#include "match.gperf.h"
 
 unsigned count_foo(FILE *f) {
 	unsigned res = 0;

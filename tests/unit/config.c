@@ -2,10 +2,11 @@
 // Copyright 2021, CZ.NIC z.s.p.o. (http://www.nic.cz/)
 #include <string.h>
 
-#define SUITE "count"
+#define SUITE "config"
 #include "unittests.h"
 
 #include "config.h"
+#include "log.h"
 
 // Test various command line arguments
 TEST_CASE(arguments) {}
@@ -61,3 +62,9 @@ END_TEST
 
 // Test configuration loading
 TEST_CASE(config) {}
+
+TEST(config, logcnf) {
+	char *args[] = {"foo", "--config", test_file("log.conf")};
+	load_config(sizeof(args) / sizeof(*args), args);
+	ck_assert_int_eq(log_level(DEFLOG), 2);
+}

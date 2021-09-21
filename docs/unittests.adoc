@@ -12,7 +12,7 @@ suite contains one or more cases and cases contain one or more tests. The suite
 creation is handled automatically as well as collection to central check handle.
 You as a user have to define only test cases and tests.
 
-This is the minimal test suite picked from `tests/unittests/count.c`:
+This is the minimal test suite picked from `tests/unit/count.c`:
 
 [,c]
 ----
@@ -89,4 +89,4 @@ variant for `ARRAY_TEST`.
 
 [NOTE]
   The C file is not automatically compiled. You have to add it as source to
-  unit test application in the `tests/unittests/Makefile` file.
+  unit test application in the `tests/unit/meson.build` file.

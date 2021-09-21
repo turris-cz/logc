@@ -16,8 +16,13 @@ teardown() {
 }
 
 foo() {
-	${LOG_COMPILER:-} ${LOG_COMPILER:+ --log-fd=3} \
-		"${BUILD_DIR:-.}/foo" "$@"
+	local valgrind_log
+	valgrind_log="$(mktemp -p "$BATS_TEST_TMPDIR" "valgrind.XXXXXX")"
+	${VALGRIND:-} ${VALGRIND:+--log-file="$valgrind_log" --error-exitcode=1 --} \
+		"${TEST_FOO:-foo}" "$@"
+	ec=$?
+	[ ! -s "$valgrind_log" ] || sed 's/^/#/' "$valgrind_log" >&3
+	return $ec
 }
 
 @test "help" {

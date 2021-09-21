@@ -18,7 +18,7 @@ cd newproj
 cat >README.adoc <<EOF
 = New project
 CZ.NIC z.s.p.o. <packaging@turris.cz>
-v1.0, 2021-07-09
+v0.0, 2021-01-01
 :icons:
 
 This project is the new project. Make sure to describe here your project before
@@ -54,7 +54,7 @@ rename all relevant code should be:
 
 [,sh]
 ----
-set -i 's/c-template/newproj/g' .gitlab-ci/release.sh .gitignore configure.ac
+set -i 's/c-template/newproj/g' .gitlab-ci/release.sh .gitignore meson.build
 ----
 
 Note that the suggestion here might not be all so you should verify all usages
@@ -76,36 +76,29 @@ You want to remove existing library framework if you plan to write only the
 application. To do so you have to remove library itself and its tests.
 
 To remove library you can just remove whole directory `libfoo` and `include`.
-With that you also have to remove the appropriate _include_ in the top level
-`Makefile.am` file. The last place is config file generation in `configure.ac`
-where you want to remove `libfoo/foo.pc` from `AC_CONFIG_FILES`.
+With that you also have to remove lines `includes =
+include_directories("include")` and `subdir("libfoo")` in the top level
+`meson.build` file.
 
-To remove tests you need to remove `tests/unittests/count.c` and an appropriate
-section from `tests/unittests/Makefile.am`. The section you want to remove is
+To remove tests you need to remove `tests/unit/count.c` and an appropriate
+section from `tests/unit/meson.build`. The section you want to remove is
 the one building `unittests-libfoo`.
 
-The last optional operation is to remove the following lines from `configure.ac`
-as they are not required if you are not building library:
-
-[,c]
-----
-AM_PROG_AR
-LT_INIT
-PKG_INSTALLDIR
-----
+The last optional operation is to remove line `libconfig =
+dependency("libconfig")` from top level `meson.build` as it is not required when
+you are not building library.
 
 
 == 2b. Replicate and rename libraries
 
 The library rename have to be performed by not only renaming the `libfoo`
-directory but primarily by changing the content of `libfoo/Makefile.am` and code
+directory but primarily by changing the content of `libfoo/meson.build` and code
 of course. You can simply replace the `libfoo` to your name with `sed`.
 
-You have to also update _include_ path in `Makefile.am` and `AC_CONFIG_FILES`
-reference in the file `configure.ac` to be correct after rename.
+You have to also update _subdir_ path in the top level `meson.build`.
 
 Do not forget to also rename tests and library reference in
-`tests/unittests/Makefile.am`.
+`tests/unit/meson.build`.
 
 To implement multiple libraries you can duplicate `libfoo` directory and all
 relevant code where `libfoo` is being referenced (those are sections that have
@@ -122,29 +115,28 @@ You want to remove existing application `foo` if you plan to write library only
 project. You have to remove not only `foo` sources but also tests.
 
 The `foo` sources are in `src` directory, remove it. Then the appropriate
-_include_ has to be removed from `Makefile.am`.
+_subdir_ has to be removed from the top level `meson.build`.
 
 The application have two types of tests and we have to remove both. The first
-are unit tests that are stored in `tests/unittests`. There you have to remove
+are unit tests that are stored in `tests/unit`. There you have to remove
 `config.c` file. You have to also remove an appropriate section from
-`/tests/unittests/Makefile.am`. The second type of tests, integration tests, can
-be removed all together as they are used only for applications. Remove the whole
-directory `tests/integration` and remove an appropriate _include_ from
-`tests/Makefile.am`. With integration tests missing you can also move unit tests
+`/tests/unit/meson.build`. The second type of tests, integration tests, can be
+removed all together as they are used only for applications. Remove the whole
+directory `tests/run` and remove an appropriate _subdir_ from
+`tests/meson.build`. With integration tests missing you can also move unit tests
 one level higher for cleaner files tree.
 
 The last non-essential step is to remove no longer needed requirements from
-`configure.ac`. You most likely not going to need `libconfig` and `argp` in your
-library so feel free to remove them. Without `libconfig` we no longer need
-default configuration path thus remove it as well. You can also remove `bats`
-that is checked in `Tests` section.
+the top level `meson.build`. You most likely not going to need `libconfig` and
+`argp` in your library so feel free to remove them. Without `libconfig` we no
+longer need default configuration path thus remove it as well.
 
 
 == 3b Replicate and rename applications
 
 The application rename has to be performed as clearly you do not want to write
 application called `foo`. The rename has to be performed in the
-`src/Makefile.am` file by simply replacing `foo` with name you want to use.
+`src/meson.build` file by simply replacing `foo` with name you want to use.
 
 The `src` directory should be used only if you plan to name binary exactly the
 same way as the project otherwise it should be named somehow relative to the
@@ -160,9 +152,8 @@ what you need you want to remove this link dependency or change it to new
 library name.
 
 The last location where application source file as well as application binary is
-referenced are tests. You have to rename binary used in
-`tests/integration/foo.bats` and unit test name in
-`/tests/unittests/Makefile.am`.
+referenced are tests. You have to rename binary used in `tests/run/foo.bats` and
+unit test name in `/tests/unit/meson.build`.
 
 
 == 4. Cleanup

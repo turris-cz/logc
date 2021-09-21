@@ -3,36 +3,20 @@
 GNU gperf is a perfect hash function generator. The online manual is available
 https://www.gnu.org/software/gperf/manual/gperf.html[here].
 
-The integration to build system is done such a way that gperf is required only for
-development. It is not required for distribution archives as those have resulting
-C files included.
+The integration to build system is done such a way that gperf is required only
+for development. It is not required for distribution archives as those have
+resulting C files included.
 
 
 == Usage
 
-To use gperf you have to create gperf file. To include it in the build system you
-have to include code such as this:
-
-----
-foo_gperf = %reldir%/match.gperf.c
-$(foo_OBJECTS): $(foo_gperf)
-gperf_files += ${foo_gperf}
-----
-
-The first line is a list of all gperf result files (notice the additional `.c`).
-The second line adds those files as a dependency for building object files for
-`foo` binary. And the last, third line, adds them to list of all gperf files.
-Note that the last line is required for generated C files to be removed on
-cleanup and thus do not forget it.
+To use gperf you have to create gperf file. To include it in the build system
+you have to add source file to your project that is processed by it. The code is
+simply `gperf.process("your.gperf")` for `your.gperf` file. Investigate the
+`libfoo/meson.build` file to see it.
 
 
 == Removal
 
-If you do not need gperf then the removal has to be done on the following places:
-
-- Remove file `utils/gperf.am`
-- Remove line `include utils/gperf.am` from `Makefile.am` file
-- Remove all lines starting `AC_CHECK_FILE([${0%/*}/bootstrap],[` until and
-  including the `AM_CONDITIONAL([GPERF_GENERATE], [test -n "$GPERF"])` from file
-  `configure.ac`
-- Remove `*.gperf.c` line from `.gitignore` file
+If you do not need gperf then you can remove the `gperf` assignment in the top
+level `meson.build`.
