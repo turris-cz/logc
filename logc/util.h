@@ -24,11 +24,11 @@
 #include <syslog.h>
 
 
-inline bool str_empty(const char *str) {
+static inline bool str_empty(const char *str) {
 	return !str || *str == '\0';
 }
 
-inline int msg2syslog_level(enum log_message_level msg_level) {
+static inline int msg2syslog_level(enum log_message_level msg_level) {
 	switch (msg_level) {
 		case LL_CRITICAL:
 			return LOG_CRIT;
