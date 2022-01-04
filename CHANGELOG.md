@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+- cross compilation configure error
 - error when inline function is exported
 
 ## [0.4.0] - 2021-09-09
