@@ -22,25 +22,3 @@ tests/*/*.trs
 *.gcno
 *.gcda
 /c-template-*-coverage*
-
-## Autotools
-/.m4
-/.aux
-# http://www.gnu.org/software/automake
-Makefile
-Makefile.in
-.deps
-.dirstamp
-# http://www.gnu.org/software/autoconf
-autom4te.cache
-/autoscan.log
-/autoscan-*.log
-/aclocal.m4
-/config.log
-/config.status
-/configure
-/configure.scan
-/aminclude_static.am
-# https://www.gnu.org/software/libtool/
-/ltmain.sh
-/libtool
