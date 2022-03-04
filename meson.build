@@ -14,8 +14,6 @@ logc_config = dependency('logc_config')
 argp = cc.has_function('argp_parse') ? declare_dependency() : cc.find_library('argp')
 libconfig = dependency('libconfig')
 
-includes = include_directories('include')
-
 gperf = generator(find_program('gperf'),
   output: '@PLAINNAME@.h',
   arguments: ['@EXTRA_ARGS@', '--output-file=@OUTPUT@', '@INPUT@']
@@ -23,6 +21,7 @@ gperf = generator(find_program('gperf'),
 
 add_project_arguments('-DPROJECT_VERSION="' + meson.project_version() + '"', language: 'c')
 
+subdir('include')
 subdir('libfoo')
 subdir('src')
 

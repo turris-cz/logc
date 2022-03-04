@@ -13,6 +13,7 @@ libfoo = library('foo', libfoo_sources,
   link_args: '-Wl,--version-script=' + join_paths(meson.current_source_dir(), 'libfoo.version'),
   install: true
 )
+install_headers(libfoo_headers)
 
 
 pkg_mod = import('pkgconfig')
