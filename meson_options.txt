@@ -1,0 +1,15 @@
+option('libargp',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build argp integration library (liblogc_argp)'
+)
+option('libconfig',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build libconfig integration library (liblogc_config)'
+)
+option('tests',
+  type: 'feature',
+  value: 'auto',
+  description: 'Expect tests to be build and check for their dependencies'
+)

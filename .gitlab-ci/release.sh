@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eu
+NAME="logc"
 
 VERSION="$(echo "${CI_COMMIT_TAG}" | sed -nE 's/v([0-9]+)\.([0-9]+)\.([0-9]+).*/\1.\2.\3/p')"
 CHANGELOG="$(awk '
@@ -19,8 +20,8 @@ CHANGELOG="$(awk '
 	' CHANGELOG.md)"
 
 declare -a args
-for dist in logc-*.tar.gz logc-*.tar.xz logc-*.zip; do
-	URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/logc/${VERSION}/${dist}"
+for dist in "$NAME"-*.tar.gz "$NAME"-*.tar.xz "$NAME"-*.zip; do
+	URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/$NAME/${VERSION}/${dist}"
 	curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${dist}" "${URL}"
 	args+=("--assets-link" "{\"name\":\"${dist}\",\"url\":\"${URL}\"}")
 done

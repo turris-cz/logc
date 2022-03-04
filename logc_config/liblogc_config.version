@@ -1,5 +1,7 @@
 V0.0 {
 	global:
+		log_logc_config;
+
 		logc_config_load_config;
 		logc_config_load_setting;
 

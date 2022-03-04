@@ -1,34 +1,15 @@
-/* Copyright (c) 2021 CZ.NIC z.s.p.o. (http://www.nic.cz/)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-#define DEFLOG tlog
-#include <check.h>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020-2022, CZ.NIC z.s.p.o. (http://www.nic.cz/)
+#define SUITE "logc"
+#define DEFAULT_SETUP testconfig_setup
+#define DEFAULT_TEARDOWN testconfig_teardown
+#include "unittests.h"
 #include <logc_config.h>
-#include "logc_fixtures.h"
-
-void unittests_add_suite(Suite*);
 
 
 static config_t testconfig;
 static void testconfig_setup() {
-	setup();
+	basic_setup();
 	log_bind(tlog, log_logc_config);
 	config_init(&testconfig);
 }
@@ -50,48 +31,52 @@ static void testconfig_testconf_setup() {
 
 static void testconfig_teardown() {
 	config_destroy(&testconfig);
-	teardown();
+	basic_teardown();
 }
+
+TEST_CASE(testconf, testconfig_testconf_setup) {}
 
 // TODO we can't verify that file was configured right now thanks to limited
 // API. We should extend API in the future to allow that and add this to tests
 // here.
 
-START_TEST(testconf_config) {
+TEST(testconf, testconf_config) {
 	logc_config_load(tlog, &testconfig);
 	ck_assert_int_eq(log_level(tlog), 2);
 	ck_assert(log_syslog(tlog));
 }
 END_TEST
 
-START_TEST(testconf_setting) {
+TEST(testconf, testconf_setting) {
 	logc_config_load(tlog, config_lookup(&testconfig, "log"));
 	ck_assert_int_eq(log_level(tlog), 2);
 	ck_assert(log_syslog(tlog));
 }
 END_TEST
 
-START_TEST(testconf_negativelevel) {
+TEST(testconf, testconf_negativelevel) {
 	logc_config_load(tlog, config_lookup(&testconfig, "negativelevel"));
 	ck_assert_int_eq(log_level(tlog), -2);
 	ck_assert(!log_syslog(tlog));
 }
 END_TEST
 
-START_TEST(testconf_empty) {
+TEST(testconf, testconf_empty) {
 	logc_config_load(tlog, config_lookup(&testconfig, "empty"));
 	ck_assert_int_eq(log_level(tlog), 0);
 	ck_assert(!log_syslog(tlog));
 }
 END_TEST
 
-START_TEST(testconf_null) {
+TEST(testconf, testconf_null) {
 	logc_config_load(tlog, (config_setting_t*)NULL);
 	ck_assert_int_eq(log_level(tlog), 0);
 	ck_assert(!log_syslog(tlog));
 }
 END_TEST
 
+
+TEST_CASE(invalid) {}
 
 static const struct {
 	const char *conf;
@@ -113,13 +98,15 @@ static const struct {
 	},
 };
 
-START_TEST(setting_invalid) {
-	ck_assert_int_eq(config_read_string(&testconfig, setting_invalid_data[_i].conf), CONFIG_TRUE);
+ARRAY_TEST(invalid, setting_invalid, setting_invalid_data) {
+	ck_assert_int_eq(config_read_string(&testconfig, _d.conf), CONFIG_TRUE);
 	logc_config_load(tlog, config_root_setting(&testconfig));
-	ck_assert_str_eq(stderr_data, setting_invalid_data[_i].error);
+	ck_assert_str_eq(stderr_data, _d.error);
 }
 END_TEST
 
+
+TEST_CASE(path, testconfig_testconf_setup) {}
 
 static const char *setting_paths_data[] = {
 	"log",
@@ -129,27 +116,29 @@ static const char *setting_paths_data[] = {
 	"empty",
 	"foo.fee.faa",
 };
-START_TEST(setting_paths) {
-	char *path = config_setting_path(config_lookup(&testconfig, setting_paths_data[_i]));
-	ck_assert_str_eq(path, setting_paths_data[_i]);
+ARRAY_TEST(path, setting_paths, setting_paths_data) {
+	char *path = config_setting_path(config_lookup(&testconfig, _d));
+	ck_assert_str_eq(path, _d);
 	free(path);
 }
 END_TEST
 
-START_TEST(setting_path_root) {
+TEST(path, setting_path_root) {
 	char *path = config_setting_path(config_root_setting(&testconfig));
 	ck_assert_str_eq(path, "");
 	free(path);
 }
 END_TEST
 
-START_TEST(setting_path_null) {
+TEST(path, setting_path_null) {
 	char *path = config_setting_path(NULL);
 	ck_assert_str_eq(path, "");
 	free(path);
 }
 END_TEST
 
+
+TEST_CASE(type) {}
 
 static const struct {
 	const char *conf;
@@ -181,62 +170,21 @@ static const struct {
 	},
 };
 
-START_TEST(log_setting_type_valid) {
-	ck_assert_int_eq(config_read_string(&testconfig, log_setting_type_data[_i].conf), CONFIG_TRUE);
+ARRAY_TEST(type, log_setting_type_valid, log_setting_type_data) {
+	ck_assert_int_eq(config_read_string(&testconfig, _d.conf), CONFIG_TRUE);
 	ck_assert(check_config_setting_type(
-			config_lookup(&testconfig, log_setting_type_data[_i].path),
-			log_setting_type_data[_i].valid_type
+			config_lookup(&testconfig, _d.path),
+			_d.valid_type
 		));
 	ck_assert_int_eq(stderr_len, 0);
 }
 END_TEST
 
-START_TEST(log_setting_type_invalid) {
-	ck_assert_int_eq(config_read_string(&testconfig, log_setting_type_data[_i].conf), CONFIG_TRUE);
+ARRAY_TEST(type, log_setting_type_invalid, log_setting_type_data) {
+	ck_assert_int_eq(config_read_string(&testconfig, _d.conf), CONFIG_TRUE);
 	ck_assert(!check_config_setting_type(
-			config_lookup(&testconfig, log_setting_type_data[_i].path),
-			log_setting_type_data[_i].invalid_type
+			config_lookup(&testconfig, _d.path), _d.invalid_type
 		));
-	ck_assert_str_eq(stderr_data, log_setting_type_data[_i].error);
+	ck_assert_str_eq(stderr_data, _d.error);
 }
 END_TEST
-
-
-
-__attribute__((constructor))
-static void suite() {
-	Suite *suite = suite_create("logc_config");
-
-	TCase *tctestconf = tcase_create("testconf");
-	tcase_add_checked_fixture(tctestconf, testconfig_testconf_setup, testconfig_teardown);
-	tcase_add_test(tctestconf, testconf_config);
-	tcase_add_test(tctestconf, testconf_setting);
-	tcase_add_test(tctestconf, testconf_negativelevel);
-	tcase_add_test(tctestconf, testconf_empty);
-	tcase_add_test(tctestconf, testconf_null);
-	suite_add_tcase(suite, tctestconf);
-
-	TCase *tcinvalid = tcase_create("invalid");
-	tcase_add_checked_fixture(tcinvalid, testconfig_setup, testconfig_teardown);
-	tcase_add_loop_test(tcinvalid, setting_invalid,
-			0, sizeof(setting_invalid_data) / sizeof(*setting_invalid_data));
-	suite_add_tcase(suite, tcinvalid);
-
-	TCase *tcpath = tcase_create("config_setting_path");
-	tcase_add_checked_fixture(tcpath, testconfig_testconf_setup, testconfig_teardown);
-	tcase_add_loop_test(tcpath, setting_paths,
-			0, sizeof(setting_paths_data) / sizeof(*setting_paths_data));
-	tcase_add_test(tcpath, setting_path_root);
-	tcase_add_test(tcpath, setting_path_null);
-	suite_add_tcase(suite, tcpath);
-
-	TCase *tctype = tcase_create("log_setting_type");
-	tcase_add_checked_fixture(tctype, testconfig_setup, testconfig_teardown);
-	tcase_add_loop_test(tctype, log_setting_type_valid,
-			0, sizeof(log_setting_type_data) / sizeof(*log_setting_type_data));
-	tcase_add_loop_test(tctype, log_setting_type_invalid,
-			0, sizeof(log_setting_type_data) / sizeof(*log_setting_type_data));
-	suite_add_tcase(suite, tctype);
-
-	unittests_add_suite(suite);
-}

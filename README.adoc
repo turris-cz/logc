@@ -1,6 +1,6 @@
 = Logging for C (LogC)
 CZ.NIC z.s.p.o. <packaging@turris.cz>
-v1.0, 2020-06-14
+v0.0, 2020-06-14
 :icons:
 
 This is library for C for logging. It is able to output to any stream (file,
@@ -16,37 +16,38 @@ simple to include as possible.
 
 == Dependencies
 
-* On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone]
-* http://hyperrealm.github.io/libconfig/[libconfig] for optional liblogc_config
-
-For bootstrap (not release tarballs):
-
-* autotools
-* autoconf-archive
+* https://mesonbuild.com/[Meson build system]
 * https://www.gnu.org/software/gperf[gperf]
+* http://www.hyperrealm.com/libconfig/libconfig.html[libconfig] for optional
+  liblogc_config
+* On non-glibc http://www.lysator.liu.se/~nisse/misc[argp-standalone] for
+  optional liblogc_argp
 
 For tests:
 
 * https://libcheck.github.io/check[check]
 * Optionally http://www.valgrind.org[valgrind]
-* For linting https://github.com/danmar/cppcheck[cppcheck]
-* For coverage http://ltp.sourceforge.net/coverage/lcov.php[lcov]
+
+For code coverage report:
+
+* http://ltp.sourceforge.net/coverage/lcov.php[lcov]
+
+For linting:
+
+* https://github.com/danmar/cppcheck[cppcheck]
+* https://dwheeler.com/flawfinder/[flawfinder]
 
 
 == Compilation
 
-To compile this library you have to run:
+To compile this project you have to run:
 
 ----
- ./configure
- make
+meson setup builddir
+meson compile -C builddir
 ----
 
-Subsequent installation can be done with `make install`.
-
-When you do not use distribution archive then you have to run initially
-`./bootstrap`.
-
+Subsequent installation can be done with `meson install -C builddir`.
 
 == LogC log in general
 
@@ -181,34 +182,44 @@ LogC provides additional optional extensions documented separately:
 
 == Running tests
 
-LogC contains basic tests in directory tests. To run all tests you can just simply
-run:
+This project contains basic tests in directory tests.
+
+To run tests you have to either use `debug` build type (which is commonly the
+default for meson) or explicitly enable them using `meson configure
+-Dtests=enabled builddir`. To execute all tests run:
 
 ----
- make check
+meson test -C builddir
 ----
 
-You can also run tests with Valgrind:
+You can also run tests with Valgrind tool such as `memcheck`:
 
 ----
- make check-valgrind
+VALGRIND=memcheck meson test -C builddir
 ----
 
-To run checks with just one specific Valgrind test such as memtest you can run:
+=== Code coverage report
+
+There is also possibility to generate code coverage report from test cases. To
+do so you can run:
 
 ----
- make check-valgrind-memcheck
+meson setup -Db_coverage=true builddir
+meson test -C builddir
+ninja -C builddir coverage-html
 ----
 
-Source code of project can be also linted with cppcheck by running:
+The coverage report is generated in directory:
+`builddir/meson-logs/coveragereport`.
+
+== Linting the code
+
+The code can also be linted if linters are installed. There are two linter
+supported at the moment. There is `cppcheck` and `flawfinder`. To run them you
+can do:
 
 ----
- make lint
-----
-
-There is also possibility to generate code coverage for test cases. To do so you
-can run:
-
-----
- make check-code-coverage
+meson setup builddir
+meson compile -C builddir cppcheck
+meson compile -C builddir flawfinder
 ----

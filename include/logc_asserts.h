@@ -1,23 +1,5 @@
-/* Copyright (c) 2021 CZ.NIC z.s.p.o. (http://www.nic.cz/)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2021, CZ.NIC z.s.p.o. (http://www.nic.cz/)
 #ifndef _LOGC_ASSERTS_H_
 #define _LOGC_ASSERTS_H_
 #include <logc_assert.h>
@@ -39,35 +21,35 @@
 #define __log_assert_cmp_op_ge >=
 
 #define __cmp_num(cmp) \
-	inline bool __log_assert_cmp_num_##cmp(long long a, long long b) { \
+	static inline bool __log_assert_cmp_num_##cmp(long long a, long long b) { \
 		return a __logc_concat(__log_assert_cmp_op_, cmp) b; \
 	}
 #define __cmp_float(cmp) \
-	inline bool __log_assert_cmp_float_##cmp(long double a, long double b) { \
+	static inline bool __log_assert_cmp_float_##cmp(long double a, long double b) { \
 		return a __logc_concat(__log_assert_cmp_op_, cmp) b; \
 	}
 #define __cmp_string(cmp) \
-	inline bool __log_assert_cmp_string_##cmp(const char *a, const char *b) { \
+	static inline bool __log_assert_cmp_string_##cmp(const char *a, const char *b) { \
 		return strcmp(a, b) __logc_concat(__log_assert_cmp_op_, cmp) 0; \
 	}
 #define __cmp_stringl(cmp) \
-	inline bool __log_assert_cmp_stringl_##cmp(const char *a, const char *b, size_t len) { \
+	static inline bool __log_assert_cmp_stringl_##cmp(const char *a, const char *b, size_t len) { \
 		return strncmp(a, b, len) __logc_concat(__log_assert_cmp_op_, cmp) 0; \
 	}
 #define __cmp_mem(cmp) \
-	inline bool __log_assert_cmp_mem_##cmp(const void *a, const void *b, size_t len) { \
+	static inline bool __log_assert_cmp_mem_##cmp(const void *a, const void *b, size_t len) { \
 		return memcmp(a, b, len) __logc_concat(__log_assert_cmp_op_, cmp) 0; \
 	}
-inline bool __log_assert_cmp_floatl_eq(long double a, long double b, long double prec) {
+static inline bool __log_assert_cmp_floatl_eq(long double a, long double b, long double prec) {
 	return fabs(a - b) < prec;
 }
-inline bool __log_assert_cmp_floatl_ne(long double a, long double b, long double prec) {
+static inline bool __log_assert_cmp_floatl_ne(long double a, long double b, long double prec) {
 	return fabs(a - b) >= prec;
 }
-inline bool __log_assert_cmp_floatl_gt(long double a, long double b, long double prec) {
+static inline bool __log_assert_cmp_floatl_gt(long double a, long double b, long double prec) {
 	return (a - b) > -prec;
 }
-inline bool __log_assert_cmp_floatl_lt(long double a, long double b, long double prec) {
+static inline bool __log_assert_cmp_floatl_lt(long double a, long double b, long double prec) {
 	return (b - a) > -prec;
 }
 // Note: We do not implement le and ge variant for float precision as with

@@ -1,0 +1,1 @@
+FROM registry.nic.cz/turris/c-template/baseimg:debian

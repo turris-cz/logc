@@ -1,29 +1,9 @@
-/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-#include <check.h>
-#include <logc_argp.h>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020-2022, CZ.NIC z.s.p.o. (http://www.nic.cz/)
+#define SUITE "logc_argp"
+#include "unittests.h"
 #include "fakesyslog.h"
-#include "logc_fixtures.h"
-
-void unittests_add_suite(Suite*);
+#include <logc_argp.h>
 
 
 struct argp_levels {
@@ -33,9 +13,11 @@ struct argp_levels {
 };
 
 static void argp_setup_tlog() {
-	setup();
+	basic_setup();
 	logc_argp_log = tlog;
 }
+
+TEST_CASE(argp, argp_setup_tlog) {}
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	return ARGP_ERR_UNKNOWN;
@@ -68,10 +50,10 @@ static const struct argp_levels argp_q_v_values[] = {
 	{LL_TRACE - 1, 2, (char*[]){"t", "-vvvv"}},
 };
 
-START_TEST(argp_q_v) {
-	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser,
-			argp_q_v_values[_i].argc, argp_q_v_values[_i].argv, 0, NULL, NULL));
-	ck_assert_int_eq(argp_q_v_values[_i].level, log_level(logc_argp_log));
+ARRAY_TEST(argp, argp_q_v, argp_q_v_values) {
+	ck_assert_int_eq(0,
+			argp_parse(&argp_tlog_parser, _d.argc, _d.argv, 0, NULL, NULL));
+	ck_assert_int_eq(_d.level, log_level(logc_argp_log));
 }
 END_TEST
 
@@ -90,10 +72,10 @@ static const struct argp_levels argp_log_level_values[] = {
 	{LL_NOTICE, 0, (char*[]){NULL}},
 };
 
-START_TEST(argp_log_level) {
-	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, argp_log_level_values[_i].argc,
-		argp_log_level_values[_i].argv, 0, NULL, NULL));
-	ck_assert_int_eq(argp_log_level_values[_i].level, log_level(logc_argp_log));
+ARRAY_TEST(argp, argp_log_level, argp_log_level_values) {
+	ck_assert_int_eq(0,
+			argp_parse(&argp_tlog_parser, _d.argc, _d.argv, 0, NULL, NULL));
+	ck_assert_int_eq(_d.level, log_level(logc_argp_log));
 }
 END_TEST
 
@@ -106,13 +88,12 @@ static const struct argp_levels argp_log_level_invalid_values[] = {
 	{0, 3, (char*[]){"t", "--log-level", "-875788987897979797979678687687"}},
 };
 
-START_TEST(argp_log_level_invalid) {
-	argp_parse(&argp_tlog_parser, argp_log_level_invalid_values[_i].argc,
-		argp_log_level_invalid_values[_i].argv, 0, NULL, NULL);
+ARRAY_TEST_EXIT(argp, argp_log_level_invalid, argp_err_exit_status, argp_log_level_invalid_values) {
+	argp_parse(&argp_tlog_parser, _d.argc, _d.argv, 0, NULL, NULL);
 }
 END_TEST
 
-START_TEST(argp_log_file) {
+TEST(argp, argp_log_file) {
 	char tmpfile_path[] = "/tmp/logc_argp_log_file_XXXXXX";
 	ck_assert(mktemp(tmpfile_path));
 
@@ -135,7 +116,7 @@ START_TEST(argp_log_file) {
 }
 END_TEST
 
-START_TEST(argp_syslog) {
+TEST(argp, argp_syslog) {
 	fakesyslog_reset();
 
 	ck_assert_int_eq(0, argp_parse(&argp_tlog_parser, 2,
@@ -147,23 +128,3 @@ START_TEST(argp_syslog) {
 	ck_assert_str_eq("WARNING:tlog: foo\n", fakesyslog[0].msg);
 }
 END_TEST
-
-
-__attribute__((constructor))
-static void suite() {
-	Suite *suite = suite_create("logc_argp");
-
-	TCase *argp = tcase_create("argp");
-	tcase_add_checked_fixture(argp, argp_setup_tlog, teardown);
-	tcase_add_loop_test(argp, argp_q_v,
-		0, sizeof(argp_q_v_values) / sizeof(*argp_q_v_values));
-	tcase_add_loop_test(argp, argp_log_level,
-		0, sizeof(argp_log_level_values) / sizeof(*argp_log_level_values));
-	tcase_add_loop_exit_test(argp, argp_log_level_invalid, argp_err_exit_status,
-		0, sizeof(argp_log_level_invalid_values) / sizeof(*argp_log_level_invalid_values));
-	tcase_add_test(argp, argp_log_file);
-	tcase_add_test(argp, argp_syslog);
-	suite_add_tcase(suite, argp);
-
-	unittests_add_suite(suite);
-}

@@ -1,34 +1,16 @@
-/* Copyright (c) 2020 CZ.NIC z.s.p.o. (http://www.nic.cz/)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-#define DEFLOG tlog
-#include <check.h>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020-2022, CZ.NIC z.s.p.o. (http://www.nic.cz/)
 #include <signal.h>
 #include <errno.h>
 #include <signal.h>
-#include "logc_fixtures.h"
 
-void unittests_add_suite(Suite*);
+#define SUITE "logc"
+#include "unittests.h"
 
 
-START_TEST(simple_warning) {
+TEST_CASE(def_output) {}
+
+TEST(def_output, simple_warning) {
 	warning("This is warning!");
 
 	fflush(stderr);
@@ -37,7 +19,7 @@ START_TEST(simple_warning) {
 END_TEST
 
 #define ILL(LEVEL) (LL_##LEVEL + 3)
-const char *level_name[] = {
+static const char *level_name[] = {
 	[ILL(CRITICAL)] = "CRITICAL",
 	[ILL(ERROR)] = "ERROR",
 	[ILL(WARNING)] = "WARNING",
@@ -49,7 +31,7 @@ const char *level_name[] = {
 #undef ILL
 #define ILL(LEVEL) (LEVEL + 3)
 
-START_TEST(check_default_level) {
+LOOP_TEST(def_output, check_default_level, LL_TRACE, LL_CRITICAL) {
 	logc(tlog, _i, "This is message!");
 
 	fflush(stderr);
@@ -57,13 +39,14 @@ START_TEST(check_default_level) {
 		char *expected;
 		int len = asprintf(&expected, "%s:tlog: This is message!\n", level_name[ILL(_i)]);
 		ck_assert_str_eq(stderr_data, expected);
+		ck_assert_int_eq(stderr_len, len);
 		free(expected);
 	} else
 		ck_assert_str_eq(stderr_data, "");
 }
 END_TEST
 
-START_TEST(check_all_levels) {
+LOOP_TEST(def_output, check_all_levels, LL_TRACE, LL_CRITICAL) {
 	log_set_level(tlog, LL_TRACE);
 	logc(tlog, _i, "This is message!");
 
@@ -78,7 +61,7 @@ END_TEST
 
 #undef ILL
 
-START_TEST(app_log) {
+TEST(def_output, app_log) {
 	APP_LOG(tlog);
 	log_error(log_tlog, "This is error!");
 
@@ -87,7 +70,7 @@ START_TEST(app_log) {
 }
 END_TEST
 
-START_TEST(standard_error) {
+TEST(def_output, standard_error) {
 	errno = ENOENT;
 	error("This is error");
 	ck_assert_int_eq(errno, 0); // call should reset errno
@@ -101,7 +84,7 @@ START_TEST(standard_error) {
 }
 END_TEST
 
-START_TEST(call_verbose) {
+TEST(def_output, call_verbose) {
 	log_verbose(tlog);
 	log_verbose(tlog); // increase verbosity twice
 
@@ -115,7 +98,7 @@ START_TEST(call_verbose) {
 }
 END_TEST
 
-START_TEST(call_quiet) {
+TEST(def_output, call_quiet) {
 	log_quiet(tlog);
 	log_quiet(tlog); // decrease verbosity twice
 
@@ -129,14 +112,14 @@ START_TEST(call_quiet) {
 }
 END_TEST
 
-START_TEST(call_offset_level) {
+TEST(def_output, call_offset_level) {
 	log_offset_level(tlog, -2);
 
 	ck_assert_int_eq(log_level(tlog), LL_DEBUG);
 }
 END_TEST
 
-START_TEST(disabled_def_output) {
+TEST(def_output, disabled_def_output) {
 	log_stderr_fallback(tlog, false);
 	logc(tlog, _i, "This is message!");
 
@@ -145,7 +128,7 @@ START_TEST(disabled_def_output) {
 }
 END_TEST
 
-START_TEST(message_origin) {
+TEST(def_output, message_origin) {
 	ck_assert(!log_use_origin(tlog));
 	log_set_use_origin(tlog, true);
 	ck_assert(log_use_origin(tlog));
@@ -162,7 +145,10 @@ START_TEST(message_origin) {
 }
 END_TEST
 
-START_TEST(check_would_log) {
+
+TEST_CASE(would_log) {}
+
+LOOP_TEST(would_log, check_would_log, LL_TRACE, LL_CRITICAL) {
 	log_set_level(tlog, _i);
 
 	for (enum log_message_level level = LL_TRACE; level < LL_CRITICAL; level++)
@@ -170,7 +156,10 @@ START_TEST(check_would_log) {
 }
 END_TEST
 
-struct custom_output_tests {
+
+TEST_CASE(custom_format) {}
+
+static const struct {
 	const char *format;
 	const char *out;
 } custom_output_tests[] = {
@@ -209,24 +198,24 @@ struct custom_output_tests {
 	{" %x ", " x "}, // Any alone % is eaten up
 };
 
-START_TEST(check_custom_outputs) {
+ARRAY_TEST(custom_format, check_custom_outputs, custom_output_tests) {
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
-	log_add_output(tlog, f, 0, 0, custom_output_tests[_i].format);
+	log_add_output(tlog, f, 0, 0, _d.format);
 
 	_logc(tlog, LL_NOTICE, "tests/logc.c", 42, "function_name", "Message");
 
 	fclose(f);
 	// Last character is always new line so we skip it
-	ck_assert_mem_eq(buf, custom_output_tests[_i].out, bufsiz - 1);
+	ck_assert_mem_eq(buf, _d.out, bufsiz - 1);
 	free(buf);
 
 	ck_assert_int_eq(stderr_len, 0); // No output to stderr
 }
 END_TEST
 
-struct custom_output_flag_tests {
+static const struct {
 	const char *format;
 	int flags;
 	const char *out;
@@ -241,24 +230,24 @@ struct custom_output_flag_tests {
 	{"%(P%m%)", LOG_F_NO_COLORS & LOG_F_COLORS, ""},
 };
 
-START_TEST(check_custom_outputs_flags) {
+ARRAY_TEST(custom_format, check_custom_outputs_flags, custom_output_flag_tests) {
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
-	log_add_output(tlog, f, custom_output_flag_tests[_i].flags, 0, custom_output_flag_tests[_i].format);
+	log_add_output(tlog, f, _d.flags, 0, _d.format);
 
 	notice("Message");
 
 	fclose(f);
 	// Last character is always new line so we skip it
-	ck_assert_mem_eq(buf, custom_output_flag_tests[_i].out, bufsiz - 1);
+	ck_assert_mem_eq(buf, _d.out, bufsiz - 1);
 	free(buf);
 
 	ck_assert_int_eq(stderr_len, 0); // No output to stderr
 }
 END_TEST
 
-START_TEST(check_custom_output_remove) {
+TEST(custom_format, check_custom_output_remove) {
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
@@ -277,7 +266,7 @@ START_TEST(check_custom_output_remove) {
 }
 END_TEST
 
-START_TEST(check_custom_output_twice) {
+TEST(custom_format, check_custom_output_twice) {
 	char *buf;
 	size_t bufsiz;
 	FILE *f = open_memstream(&buf, &bufsiz);
@@ -297,7 +286,7 @@ START_TEST(check_custom_output_twice) {
 }
 END_TEST
 
-START_TEST(check_custom_output_wipe) {
+TEST(custom_format, check_custom_output_wipe) {
 	char *buf1, *buf2;
 	size_t bufsiz1, bufsiz2;
 	FILE *f1 = open_memstream(&buf1, &bufsiz1);
@@ -325,7 +314,7 @@ END_TEST
 
 // We test here once with real file as memstream does not have fileno while real
 // tmpfile does.
-START_TEST(check_custom_file_output) {
+TEST(custom_format, check_custom_file_output) {
 	FILE *f = tmpfile();
 
 	log_add_output(tlog, f, 0, 0, LOG_FORMAT_PLAIN);
@@ -355,58 +344,15 @@ void abort_setup() {
 	};
 	ck_assert_int_eq(sigemptyset(&action.sa_mask), 0);
 	ck_assert_int_eq(sigaction(SIGABRT, &action, sig_oldact), 0);
-	setup();
+	basic_setup();
 }
 
-START_TEST(cause_exit_critical) {
+TEST_CASE(cause_exit, abort_setup) {}
+
+TEST_EXIT(cause_exit, cause_exit_critical, 42) {
 	critical("Cause abort");
 }
 
-START_TEST(cause_exit_fatal) {
+TEST_EXIT(cause_exit, cause_exit_fatal, 24) {
 	fatal(24, "Cause exit");
-}
-
-
-__attribute__((constructor))
-static void suite() {
-	Suite *suite = suite_create("logc");
-
-	TCase *def_output = tcase_create("default output");
-	tcase_add_checked_fixture(def_output, setup, teardown);
-	tcase_add_test(def_output, simple_warning);
-	tcase_add_loop_test(def_output, check_default_level, LL_TRACE, LL_CRITICAL);
-	tcase_add_loop_test(def_output, check_all_levels, LL_TRACE, LL_CRITICAL);
-	tcase_add_test(def_output, app_log);
-	tcase_add_test(def_output, standard_error);
-	tcase_add_test(def_output, call_verbose);
-	tcase_add_test(def_output, call_quiet);
-	tcase_add_test(def_output, call_offset_level);
-	tcase_add_loop_test(def_output, disabled_def_output, LL_TRACE, LL_CRITICAL);
-	tcase_add_test(def_output, message_origin);
-	suite_add_tcase(suite, def_output);
-
-	TCase *would_log = tcase_create("would log check");
-	tcase_add_checked_fixture(would_log, setup, teardown);
-	tcase_add_loop_test(would_log, check_would_log, LL_TRACE, LL_CRITICAL);
-	suite_add_tcase(suite, would_log);
-
-	TCase *custom_output = tcase_create("custom output");
-	tcase_add_checked_fixture(custom_output, setup, teardown);
-	tcase_add_loop_test(custom_output, check_custom_outputs, 0,
-			sizeof(custom_output_tests) / sizeof(struct custom_output_tests));
-	tcase_add_loop_test(custom_output, check_custom_outputs_flags, 0,
-			sizeof(custom_output_flag_tests) / sizeof(struct custom_output_flag_tests));
-	tcase_add_test(custom_output, check_custom_output_remove);
-	tcase_add_test(custom_output, check_custom_output_twice);
-	tcase_add_test(custom_output, check_custom_output_wipe);
-	tcase_add_test(custom_output, check_custom_file_output);
-	suite_add_tcase(suite, custom_output);
-
-	TCase *cause_exit = tcase_create("cause exit");
-	tcase_add_checked_fixture(cause_exit, abort_setup, teardown);
-	tcase_add_exit_test(cause_exit, cause_exit_critical, 42);
-	tcase_add_exit_test(cause_exit, cause_exit_fatal, 24);
-	suite_add_tcase(suite, cause_exit);
-
-	unittests_add_suite(suite);
 }

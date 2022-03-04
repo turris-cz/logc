@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - cross compilation configure error
 - error when inline function is exported
 
+### Changed
+- build system changed from Autotools to Meson
+
+
 ## [0.4.0] - 2021-09-09
 ### Added
 - `liblogc_config` for configuration parsing using libconfig
