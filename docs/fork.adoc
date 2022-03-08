@@ -54,8 +54,14 @@ rename all relevant code should be:
 
 [,sh]
 ----
-set -i 's/c-template/newproj/g' .gitlab-ci/release.sh .gitignore meson.build
+set -i 's/c-template/newproj/g' .gitignore meson.build
 ----
+
+[WARNIG]
+  There is `c-template` as value for `PROJECT_NAME` variable set in the
+  `.gitlab-ci.yml` file. This is important to be changed to the project name.
+  This is unsed only to releases and it is pretty stupid to generate release
+  with invalid name.
 
 Note that the suggestion here might not be all so you should verify all usages
 of `c-template` string in the project on your own as it is easier for us to

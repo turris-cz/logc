@@ -1,3 +1,6 @@
+variables:
+  PROJECT_NAME: 'c-template'
+
 include:
   - project: 'turris/c-template'
     ref: base
