@@ -15,9 +15,8 @@ obstack = cc.has_function('obstack_free') ? declare_dependency() : cc.find_libra
 unittest_libfoo = executable('unittest-libfoo', unittests_common + [
     'count.c',
   ],
-  dependencies: [check, obstack],
+  dependencies: [libfoo_dep, check, obstack],
   include_directories: includes,
-  link_with: libfoo,
 )
 test('unittest-libfoo', test_driver,
   args: [unittest_libfoo.full_path()],

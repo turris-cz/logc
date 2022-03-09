@@ -15,6 +15,8 @@ libfoo = library('foo', libfoo_sources,
 )
 install_headers(libfoo_headers)
 
+libfoo_dep = declare_dependency(include_directories: includes, link_with: libfoo)
+
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(libfoo,
