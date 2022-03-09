@@ -14,6 +14,11 @@ liblogc_argp = library('logc_argp', liblogc_argp_sources,
 )
 install_headers(liblogc_argp_headers)
 
+logc_argp_dep = declare_dependency(
+  include_directories: includes,
+  link_with: [liblogc, liblogc_argp]
+)
+
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(liblogc_argp,

@@ -16,6 +16,8 @@ gperf = generator(find_program('gperf'),
 subdir('include')
 subdir('logc')
 
+meson.override_dependency(meson.project_name(), logc_dep)
+
 argp = cc.has_function('argp_parse') ? declare_dependency() : cc.find_library('argp', required: get_option('libargp'))
 if argp.found()
   subdir('logc_argp')

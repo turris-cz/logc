@@ -19,6 +19,11 @@ liblogc = library('logc', liblogc_sources,
 )
 install_headers(liblogc_headers)
 
+logc_dep = declare_dependency(
+  include_directories: includes,
+  link_with: liblogc
+)
+
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(liblogc,
