@@ -9,8 +9,8 @@ cc = meson.get_compiler('c')
 
 
 logc = dependency('logc', version: '>=0.2.0')
-logc_argp = dependency('logc_argp')
-logc_config = dependency('logc_config')
+logc_argp = dependency('logc_argp', fallback: ['logc', 'logc_argp_dep'])
+logc_config = dependency('logc_config', fallback: ['logc', 'logc_config_dep'])
 argp = cc.has_function('argp_parse') ? declare_dependency() : cc.find_library('argp')
 libconfig = dependency('libconfig')
 

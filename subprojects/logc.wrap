@@ -1,0 +1,3 @@
+[wrap-git]
+url = https://gitlab.nic.cz/turris/logc.git
+revision = master
