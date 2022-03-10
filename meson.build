@@ -28,7 +28,7 @@ subdir('src')
 meson.override_dependency(meson.project_name(), libfoo_dep)
 
 test_buildtypes = ['debug', 'debugoptimized']
-if get_option('tests').enabled() or (get_option('tests').auto() and get_option('buildtype') in test_buildtypes)
+if not meson.is_subproject() and (get_option('tests').enabled() or (get_option('tests').auto() and get_option('buildtype') in test_buildtypes))
   subdir('tests')
 endif
 
