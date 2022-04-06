@@ -1,3 +1,6 @@
+variables:
+  PROJECT_NAME: 'logc'
+
 include:
   - project: 'turris/c-template'
     ref: base

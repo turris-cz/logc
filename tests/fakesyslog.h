@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020, CZ.NIC z.s.p.o. (http://www.nic.cz/)
 #include <unistd.h>
 
 struct fakesyslog {
